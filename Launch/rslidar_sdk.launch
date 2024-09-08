@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+    <include file= "$(find rslidar_sdk)/launch/start.launch"/>
+    <!--<node pkg="perception" type="VoxelDownsample" name="VoxelDownsample" output="screen">
+    </node>
+    <node pkg="perception" type="GroundRemoval" name="GroundRemoval" output="screen">
+    </node>
+    <node pkg="perception" type="DonSegmenation" name="DonSegmenation" output="screen">
+    </node>-->
+    <node pkg="perception" type="LidarHeightRemoval" name="LidarHeightRemoval" output="screen">
+    </node>
+    <node pkg="perception" type="CustomClustering" name="CustomClustering" output="screen">
+    </node>
+</launch>

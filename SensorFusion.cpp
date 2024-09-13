@@ -1,3 +1,4 @@
+#include <cmath>
 #include <perception/CoordinateList.h>
 #include <perception/Coordinates.h>
 #include "ros/ros.h"
@@ -13,7 +14,8 @@
 #define LidarSource "rslidar"
 #define LidarHeight 0.18 //0.2
 // float LidarTransform[] = {};
-
+#define Theta 0.0175*0
+sensor_msgs::PointCloudConstPtr CurrentCameraCluster;
 perception::CoordinateList CameraClusterList;
 // CameraClusterList.size = 0;
 perception::CoordinateList FusedClustersList;
@@ -47,26 +49,54 @@ public:
         for (int index = 0; index < LidarClusters.size; index++){
             perception::Coordinates LidarCluster = LidarClusters.ConeCoordinates[index];
             LidarCluster.z += 0.05;
+            float Lidar_Rotated_X = LidarCluster.x*cos(Theta) + LidarCluster.z*sin(Theta);
+            // float Lidar_Rotated_Y = LidarCluster.y;
+            float Lidar_Rotated_Z = -LidarCluster.x*sin(Theta) + LidarCluster.z*cos(Theta);
+            LidarCluster.x = Lidar_Rotated_X;
+            // LidarCluster.y = Lidar_Rotated_Y;
+            LidarCluster.z = Lidar_Rotated_Z;
             //LidarCluster.x += 0;
             //LidarCluster.y += 0;
-            
+
             // convert lidar axis to image axis
             // zc = x, xc = -y, yc = -z
-            for (int nestedindex = 0; nestedindex < CameraClusterList.size; nestedindex++){
-                perception::Coordinates CameraCluster = CameraClusterList.ConeCoordinates[nestedindex];
-                if (abs(525 * (- LidarCluster.y)/(LidarCluster.x) + 319.5 - CameraCluster.x) < 100){
-                    if ((525 * (- LidarCluster.z)/(LidarCluster.x) + 239.5 - CameraCluster.x) < 100){
-                        perception::Coordinates CurrentCluster;
-                        CurrentCluster.x = - LidarCluster.y;
-                        CurrentCluster.y = LidarCluster.x;
-                        CurrentCluster.z = LidarCluster.z -0.05;
-                        CurrentCluster.colour = CameraCluster.colour;
-                        fused_pc->push_back(pcl::PointXYZ(LidarCluster.x, LidarCluster.y, LidarCluster.z-0.05));
-                        FusedClustersList.ConeCoordinates.push_back(CurrentCluster);
-                        (FusedClustersList.size)++;
-                        break;
-                    }
-                }
+            float Lidar_U = 525 * (- LidarCluster.y)/(LidarCluster.x) + 319.5;
+            float Lidar_V = 525 * (- LidarCluster.z)/(LidarCluster.x) + 239.5;          
+            std::cout<<Lidar_U << " "<<Lidar_V<<std::endl;
+            // for (int nestedindex = 0; nestedindex < CameraClusterList.size; nestedindex++){
+            //     perception::Coordinates CameraCluster = CameraClusterList.ConeCoordinates[nestedindex];
+            //     if (abs(Lidar_U - CameraCluster.x) < (float)300/std::log(LidarCluster.x)){ //100){
+            //         if (abs(Lidar_V - CameraCluster.x) < (float)300/std::log(LidarCluster.x)){ //100){
+            //             perception::Coordinates CurrentCluster;
+            //             CurrentCluster.x = - LidarCluster.y; //rotate x and y
+            //             CurrentCluster.y = LidarCluster.x;
+            //             CurrentCluster.z = LidarCluster.z -0.05;
+            //             CurrentCluster.colour = CameraCluster.colour;
+            //             std::cout<<CameraCluster.colour<<std::endl;
+            //             fused_pc->push_back(pcl::PointXYZ(LidarCluster.x, LidarCluster.y, LidarCluster.z-0.05));
+            //             FusedClustersList.ConeCoordinates.push_back(CurrentCluster);
+            //             (FusedClustersList.size)++;
+            //             break;
+            //         }
+            //     }
+            // }
+
+            for (int nested_index = 1; nested_index <= ((*CurrentCameraCluster).channels)[0].values[0] ;nested_index++){
+                auto Camera_Cone = ((*CurrentCameraCluster).channels)[nested_index];
+                if ((Camera_Cone.values[0] > 0.3)
+                 && ((Lidar_U>= Camera_Cone.values[1]) && (Lidar_U<= Camera_Cone.values[3]))
+                 && ((Lidar_V>= Camera_Cone.values[2]) && (Lidar_V<= Camera_Cone.values[4]))
+                 ){
+                    perception::Coordinates CurrentCluster;
+                    CurrentCluster.x = - LidarCluster.y;
+                    CurrentCluster.y = LidarCluster.x;
+                    CurrentCluster.z = LidarCluster.z -0.05;
+                    CurrentCluster.colour = ((Camera_Cone.name).compare("blue_cone") == 0) ? 1:0;
+                    fused_pc->push_back(pcl::PointXYZ(LidarCluster.x, LidarCluster.y, LidarCluster.z-0.05));
+                    FusedClustersList.ConeCoordinates.push_back(CurrentCluster);
+                    (FusedClustersList.size)++;
+                    break;
+                }   
             }
         }
         FusedCoordinatesPc.publish(*fused_pc);
@@ -77,25 +107,26 @@ public:
 
     void camera_callback(const sensor_msgs::PointCloudConstPtr& CameraClusters ) 
     {
-        CameraClusterList.header.stamp = ros::Time::now();
-        // CameraCluster.header.frame_id = LidarSource;
-        CameraClusterList.size = 0;
-        CameraClusterList.ConeCoordinates.clear();
-        for (int index = 1; index <= ((*CameraClusters).channels)[0].values[0] ;index++){
-            auto Cone = ((*CameraClusters).channels)[index];
-          if (Cone.values[0] > 0.3){
-            // std::cout <<"1";
-            perception::Coordinates CurrentCluster;
-            CurrentCluster.x = (Cone.values[1] + Cone.values[3])/2;
-            CurrentCluster.y = Cone.values[2];
-            CurrentCluster.z = 0;
-            CurrentCluster.colour = ((Cone.name).compare("blue_cone") == 0) ? 1:0 ;
-            // std::cout<<CurrentCluster.colour;
-            CameraClusterList.ConeCoordinates.push_back(CurrentCluster);
-            CameraClusterList.size ++;
-          }   
-        }
-    
+        // CameraClusterList.header.stamp = ros::Time::now();
+        // // CameraCluster.header.frame_id = LidarSource;
+        // CameraClusterList.size = 0;
+        // CameraClusterList.ConeCoordinates.clear();
+        // for (int index = 1; index <= ((*CameraClusters).channels)[0].values[0] ;index++){
+        //     auto Cone = ((*CameraClusters).channels)[index];
+        //   if (Cone.values[0] > 0.3){
+        //     // std::cout <<"1";
+        //     perception::Coordinates CurrentCluster;
+        //     CurrentCluster.x = (Cone.values[1] + Cone.values[3])/2;
+        //     CurrentCluster.y = Cone.values[2];
+        //     CurrentCluster.z = 0;
+        //     CurrentCluster.colour = ((Cone.name).compare("blue_cone") == 0) ? 1:0 ;
+        //     // std::cout<<CurrentCluster.colour<<"a"<<std::endl;
+        //     // std::cout<<CurrentCluster.colour;
+        //     CameraClusterList.ConeCoordinates.push_back(CurrentCluster);
+        //     CameraClusterList.size ++;
+        //   }   
+        // }
+        CurrentCameraCluster = CameraClusters;    
     }
 
 

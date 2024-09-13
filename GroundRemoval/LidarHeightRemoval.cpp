@@ -23,10 +23,14 @@
 #include "pcl-1.10/pcl/filters/impl/filter.hpp"
 #include <pcl/filters/passthrough.h>
 
-#define LidarHeight 0.285 //0.2
+#define LidarHeight 0.265 //0.2
+#define Theta -0.006//-0.024618149859381887
+float cos_theta = cos(Theta);
+float sin_theta = sin(Theta);
 #define Threshold 0.01
 #define LidarSource "rslidar"
 #define LidarTopic "rslidar_points"
+#define MaxRadiusSq 70
 
 typedef pcl::PointXYZI PointType;
 
@@ -36,7 +40,7 @@ public:
     LidarHeightRemoval()
     {
         //LidarHeightRemovalHandle{};
-        Ground = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("Ground", 10);
+        // Ground = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("Ground", 10);
         PointCloud = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("ConeCloud", 10);
         Subscribe = LidarHeightRemovalHandle.subscribe(LidarTopic, 10, &LidarHeightRemoval::callback, this);
         //timer(LidarHeightRemovalHandle.createTimer(ros::Duration(0.1), &LidarHeightRemoval::main_loop, this));
@@ -47,13 +51,13 @@ public:
         pcl::PCLPointCloud2 pcl_pc2;
         pcl_conversions::toPCL(*msg,pcl_pc2);
         pcl::PointCloud<PointType>::Ptr cloud(new pcl::PointCloud<PointType>);
-        pcl::PointCloud<PointType>::Ptr ground(new pcl::PointCloud<PointType>);
+        // pcl::PointCloud<PointType>::Ptr ground(new pcl::PointCloud<PointType>);
         pcl::PointCloud<PointType>::Ptr cone_cloud(new pcl::PointCloud<PointType>);
         // pcl::PointCloud<PointType>::Ptr ground_nan(new pcl::PointCloud<PointType>);
         // pcl::PointCloud<PointType>::Ptr cone_cloud_nan(new pcl::PointCloud<PointType>);
-        ground->header.frame_id = LidarSource;
+        // ground->header.frame_id = LidarSource;
         // ground_nan->header.frame_id = LidarSource;
-        ground->is_dense = "false";
+        // ground->is_dense = "false";
         cone_cloud->header.frame_id = LidarSource;
         // cone_cloud_nan->header.frame_id = LidarSource;
         cone_cloud->is_dense = "false";
@@ -65,6 +69,8 @@ public:
         // float maximumy = INT_MIN;
         // float maximumz = INT_MIN;
         for (auto i : cloud->points) {
+            float rotated_x = i.x*cos_theta + i.z*sin_theta;
+            float rotated_z = -i.x*sin_theta + i.z*cos_theta;
             // std::cout<<i.x<<" "<<i.y<<" "<<i.z<<std::endl;
         //      if(i.z >maximumz){
         //          maximumz = i.z;
@@ -85,14 +91,17 @@ public:
         //          minimumz = i.z;
         //      }}
         //    std::cout << minimumx <<" " <<maximumx <<" "<<minimumy <<" " <<maximumy <<" "<<minimumz <<" " <<maximumz <<" "<<std::endl;
-            if ((i.z + LidarHeight) < Threshold || (i.x*i.x + i.y*i.y > 60)
-          || (i.x*i.x + i.y*i.y < 6) || (abs(i.y) > 1) || (i.z + LidarHeight) > 0.6
+            if ((rotated_z + LidarHeight > Threshold)
+            && (rotated_x*rotated_x + i.y*i.y < MaxRadiusSq)
+            && (abs(i.y) < 0.6) 
+            && (rotated_z + LidarHeight < 1)
+          && (rotated_x*rotated_x + i.y*i.y > 7) 
             ){
-                ground->push_back(i);
+                cone_cloud->push_back(i);  
             }
-            else{
-                cone_cloud->push_back(i);
-            }
+            // else{
+            //     ground->push_back(i);
+            // }
         }
         //std::cout<<mini<<std::endl;
         // std::vector<int> ind;
@@ -109,8 +118,8 @@ public:
         // //pass.setNegative (true);
         // pass.filter (*ground);
         // //pcl::removeNaNNormalsFromPointCloud(*ground, *ground, ind);
-        ground->is_dense = "true";
-        Ground.publish(*ground);        
+        // ground->is_dense = "true";
+        // Ground.publish(*ground);        
         // pcl::removeNaNFromPointCloud(*cone_cloud, *cone_cloud, ind);
         // pass.setInputCloud (cone_cloud);
         // pass.setFilterFieldName ("x");
@@ -134,7 +143,7 @@ public:
 private:
     ros::NodeHandle LidarHeightRemovalHandle;        // ROS node handle
     ros::Publisher PointCloud;
-    ros::Publisher Ground;        // ROS publisher for JointState messages
+    // ros::Publisher Ground;        // ROS publisher for JointState messages
     ros::Subscriber Subscribe;       // ROS subscriber for a topic
     //ros::Timer timer;          // ROS timer for periodic tasks
 };

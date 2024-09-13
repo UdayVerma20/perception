@@ -19,17 +19,20 @@
 #define LidarSource "rslidar"
 
 //ConeCheck
-#define LidarHeight 0.23
+#define LidarHeight 0.27
 #define MaxHeight 0.2
-#define MinHeight 0.08
+#define MinHeight 0.03
 // #define MinHeight 0.1 //0.2
 // #define MaxPoints 2000
-#define MinPoints 3
+#define MinPoints 7
 // #define MaxLen 1 //0.7
-// #define MaxWidth 0.6
-#define Threshold 0.02 //0.14^2
+#define MaxWidth 0.6
 
 typedef pcl::PointXYZI PointType;
+
+//thresholds
+float EuclideanThreshold =  0.01;
+float CentroidThreshold = 0.045;
 
 struct IntensityCalc{
     float Value = 0;
@@ -43,6 +46,9 @@ class CustomCluster{
     // long long Centre_y;
     // long long Centre_z;
     PointType Avg;
+    PointType Last;
+    PointType Left;
+    PointType Right;
     std::map<float,IntensityCalc> gradient;
     // float minheight;
     // float maxheight ;
@@ -52,6 +58,9 @@ class CustomCluster{
 
     CustomCluster(PointType Point){
         Avg = Point;
+        Last = Point;
+        Left = Point;
+        Right = Point;
         // PointsArr[clustersize++] = Point;
         clustersize = 1;
         (gradient[(int)(Point.z*100)].Value)+= Point.intensity;
@@ -64,9 +73,10 @@ class CustomCluster{
     }
 };
 
-int check_distance(CustomCluster Cluster, PointType point){
-    int distance = pow((Cluster.Avg.x  - point.x), 2) + pow((Cluster.Avg.y  - point.y), 2)
-     + pow((Cluster.Avg.z  - point.z), 2);
+int check_distance(PointType Cluster_Point, PointType point, float Threshold){
+    float distance = pow((Cluster_Point.x  - point.x), 2) + pow((Cluster_Point.y  - point.y), 2)
+     + pow((Cluster_Point.z  - point.z), 2);
+    // if (distance < Threshold){std::cout<<Threshold<<" "<<distance<<" "<< (distance < Threshold)<<std::endl;}
     return (distance < Threshold);
 }
 
@@ -123,7 +133,11 @@ public:
                     int found_cluster = 0;
                     for (int index = 0; index < Clusters_Vector.size(); index++){
                         CustomCluster Iter_Cluster = Clusters_Vector[index];
-                        if (check_distance(Clusters_Vector[index], point) ==1){
+                        if (
+                            check_distance(Clusters_Vector[index].Last, point, EuclideanThreshold) ||
+                            check_distance(Clusters_Vector[index].Left, point, EuclideanThreshold) ||
+                            check_distance(Clusters_Vector[index].Right, point, EuclideanThreshold) ||
+                            check_distance(Clusters_Vector[index].Avg, point, CentroidThreshold)){
                             // before increment
                             // Clusters_Vector[index].Avg.x = (Iter_Cluster.Avg.x + (point.x/Iter_Cluster.clustersize))/(1 + (1/Iter_Cluster.clustersize));
                             // Clusters_Vector[index].Avg.y = (Iter_Cluster.Avg.y + (point.y/Iter_Cluster.clustersize))/(1 + (1/Iter_Cluster.clustersize));
@@ -134,10 +148,16 @@ public:
                             //after increment
                             int current_size = (Clusters_Vector[index].clustersize++);
                             double inv_current_size = (double)1/(current_size+1);
+
+                            Clusters_Vector[index].Last = point;
+                            Clusters_Vector[index].Left =  (Iter_Cluster.Left.y >= point.y) ? point: Clusters_Vector[index].Left ;
+                            Clusters_Vector[index].Right = (Iter_Cluster.Right.y <= point.y) ? point: Clusters_Vector[index].Right;
+
                             Clusters_Vector[index].Avg.x = (double)(1 - inv_current_size)*(double)Iter_Cluster.Avg.x + (double)(point.x*inv_current_size);
                             Clusters_Vector[index].Avg.y = (double)(1 - inv_current_size)*(double)Iter_Cluster.Avg.y + (double)(point.y*inv_current_size);
                             Clusters_Vector[index].Avg.z = //(Iter_Cluster.Avg.z < point.z) ? Iter_Cluster.Avg.z : point.z;
                             (double)(1 - inv_current_size)*(double)Iter_Cluster.Avg.z + (double)(point.z*inv_current_size);
+                            
                             (Clusters_Vector[index].gradient[(int)(point.z*100)].Value)+= point.intensity;
                             (Clusters_Vector[index].gradient[(int)(point.z*100)].size)++;
                             //Clusters_Vector[index].clustersize++;
@@ -185,36 +205,45 @@ public:
             // std::cout<<Clusters_Vector.size()<<std::endl;
             cluster_pc->width = Clusters_Vector.size();
             cluster_pc->height = 1;
+            cluster_pc->push_back(PointType(0.f));
             for (int index = 0; index < Clusters_Vector.size(); index++){
                 CustomCluster Iter_Cluster = Clusters_Vector[index];
                 int dist_sq = pow(Iter_Cluster.Avg.x, 2.0) + pow(Iter_Cluster.Avg.y, 2.0) + pow(Iter_Cluster.Avg.z, 2.0);
-                int expected_points = (4000)/(dist_sq + 1); //remove dist =0
+                int expected_points = (3000)/(dist_sq + 1); //remove dist =0
                 //(height * width)/(8 * distance^2 * tan(vert.reso/2) * tan(hori.reso/2))
                 //std::cout <<std::endl<< maxheight<<minheight<<std::endl;
-                //std::cout <<pow(dist_sq,0.5)<<" "<< expected_points <<" "<< Iter_Cluster.size<<std::endl;
-                int curr_colour = 2;
+                // std::cout <<pow(dist_sq,0.5)<<" "<< expected_points <<" "<< Iter_Cluster.size<<std::endl;
+                int curr_colour = 1;
+                int dip = 0;
                 for (auto it = Iter_Cluster.gradient.begin()++; it!=Iter_Cluster.gradient.end(); ++it){
                     auto prev_it = it;
                     // std::cout<<"1";
                     --prev_it;
-                    std::cout<<it->first<<" "<<it->second.Value/it->second.size<<std::endl;
-                    // if((it->second.Value)/(it->second.size) > 2.5*((prev->second.Value)/(prev->second.size))){
-                    //     curr_colour = 1;
-                    //     break;
-                    // }
-                    // if(2.5*(it->second.Value)/(it->second.size) <((prev->second.Value)/(prev->second.size))){
-                    //     curr_colour =0;
-                    //     break;
-                    // }
+                    std::cout<<it->first<<" "<<it->second.Value/it->second.size<< " " << it->second.size<<std::endl;
+                    if((it->second.Value)/(it->second.size) > 2.5*(prev_it->second.Value)/(prev_it->second.size)){
+                        if (dip == 1){
+                            curr_colour =0;
+                            break;
+                        }
+                        // else{
+                        //     curr_colour = 0;
+                        // }
+                    }
+                    if(2.5*(it->second.Value)/(it->second.size) < (prev_it->second.Value)/(prev_it->second.size)){
+                        // curr_colour =0;
+                        dip = 1;
+                    }
                 }
                 // cone check (add gradient) 
                 if (
-                1 
-                // (Iter_Cluster.Avg.z + LidarHeight < MaxHeight) //remove floating obj
-                // && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
-                // && (Iter_Cluster.clustersize < expected_points)
-                // && (Iter_Cluster.clustersize > 0.25 * expected_points)
-                // && (Iter_Cluster.clustersize > MinPoints)
+                // 1 
+                (Iter_Cluster.Avg.z + LidarHeight < MaxHeight) //remove floating obj
+                && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
+                && (Iter_Cluster.clustersize < expected_points)
+                // // && (Iter_Cluster.clustersize > 0.13 * expected_points)
+                && (Iter_Cluster.Right.y - Iter_Cluster.Left.y < MaxWidth)
+                && (Iter_Cluster.clustersize > MinPoints)
+                // && (curr_colour == 0)
                 ){
                     Cluster.size++;
                     perception::Coordinates CurrentCluster;
@@ -222,7 +251,7 @@ public:
                     CurrentCluster.y = Iter_Cluster.Avg.y;
                     CurrentCluster.z = Iter_Cluster.Avg.z;
                     CurrentCluster.colour = curr_colour;
-                    std::cout << "Cone " <<Iter_Cluster.clustersize<<" "<<curr_colour
+                    std::cout << "Cone " <<Iter_Cluster.clustersize<<" "<<curr_colour<<" "
                     <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;
                     Cluster.ConeCoordinates.push_back(CurrentCluster);
                     cluster_pc->push_back(Iter_Cluster.Avg);

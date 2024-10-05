@@ -18,11 +18,13 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_msgs
   sensor_msgs
   geometry_msgs
+  cv_bridge
+  image_transport
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL 1.2 REQUIRED)
-
+find_package(OpenCV REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -114,7 +116,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES perception
-  CATKIN_DEPENDS message_runtime geometry_msgs roscpp std_msgs sensor_msgs
+  CATKIN_DEPENDS message_runtime geometry_msgs roscpp std_msgs sensor_msgs cv_bridge image_transport
 #  DEPENDS system_lib
 )
 
@@ -128,6 +130,7 @@ include_directories(
  #include
  ${catkin_INCLUDE_DIRS}
  ${PCL_INCLUDE_DIRS}
+ ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(${PCL_LIBRARY_DIRS})
@@ -149,8 +152,15 @@ add_definitions(${PCL_DEFINITIONS})
 
 add_executable (SensorFusion SensorFusion.cpp)
 target_link_libraries (SensorFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable (Mixed Mixed.cpp)
+target_link_libraries (Mixed ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable (MixedCustom MixedCustom.cpp)
+target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (VoxelDownsample VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(Img Img.cpp)
+target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES}
+)
 
 #Clustering
 add_executable (Clustering Clustering/Clustering.cpp)

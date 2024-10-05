@@ -46,7 +46,7 @@ def main():
 
             # Set the marker action
             marker.action = Marker.ADD
-            # marker.lifetime = rospy.Duration(0.1)
+            marker.lifetime = rospy.Duration(0.0)
 
             # Set the pose of the marker
             marker.pose.position.x = i[0]  # Set the position from the data
@@ -58,9 +58,9 @@ def main():
             marker.pose.orientation.w = 1.0
 
             # Set the scale of the marker
-            marker.scale.x = 0.6
-            marker.scale.y = 0.6  # Set scale for y and z to make it visible
-            marker.scale.z = 0.6
+            marker.scale.x = 0.4
+            marker.scale.y = 0.4  # Set scale for y and z to make it visible
+            marker.scale.z = 0.4
 
             # Set the color
             marker.color.r = 0.0

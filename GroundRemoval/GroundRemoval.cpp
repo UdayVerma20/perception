@@ -29,7 +29,7 @@ public:
     {
         //GroundRemovalHandle{};
         Ground = GroundRemovalHandle.advertise<pcl::PointCloud<pcl::PointXYZ>>("Ground", 10);
-        PointCloud = GroundRemovalHandle.advertise<pcl::PointCloud<pcl::PointXYZ>>("ConeCloud", 10);
+        PointCloud = GroundRemovalHandle.advertise<pcl::PointCloud<pcl::PointXYZI>>("ConeCloud", 10);
         //Subscribe = GroundRemovalHandle.subscribe("rslidar_points", 10, &GroundRemoval::callback, this);
         Subscribe = GroundRemovalHandle.subscribe("/velodyne_points", 10, &GroundRemoval::callback, this);
         //timer(GroundRemovalHandle.createTimer(ros::Duration(0.1), &GroundRemoval::main_loop, this));

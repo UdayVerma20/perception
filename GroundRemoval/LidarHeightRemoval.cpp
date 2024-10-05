@@ -23,14 +23,14 @@
 #include "pcl-1.10/pcl/filters/impl/filter.hpp"
 #include <pcl/filters/passthrough.h>
 
-#define LidarHeight 0.265 //0.2
-#define Theta -0.006//-0.024618149859381887
+#define LidarHeight 0.4 //0.2
+#define Theta 0//-0.024618149859381887
 float cos_theta = cos(Theta);
 float sin_theta = sin(Theta);
 #define Threshold 0.01
 #define LidarSource "rslidar"
 #define LidarTopic "rslidar_points"
-#define MaxRadiusSq 70
+#define MaxRadiusSq 35
 
 typedef pcl::PointXYZI PointType;
 
@@ -93,9 +93,9 @@ public:
         //    std::cout << minimumx <<" " <<maximumx <<" "<<minimumy <<" " <<maximumy <<" "<<minimumz <<" " <<maximumz <<" "<<std::endl;
             if ((rotated_z + LidarHeight > Threshold)
             && (rotated_x*rotated_x + i.y*i.y < MaxRadiusSq)
-            && (abs(i.y) < 0.6) 
-            && (rotated_z + LidarHeight < 1)
-          && (rotated_x*rotated_x + i.y*i.y > 7) 
+            && (abs(i.y) < 1.2) 
+            && (rotated_z + LidarHeight < 1.5)
+        //   && (rotated_x*rotated_x + i.y*i.y > 7) 
             ){
                 cone_cloud->push_back(i);  
             }

@@ -30,8 +30,8 @@ public:
         //GroundRemovalHandle{};
         Ground = GroundRemovalHandle.advertise<pcl::PointCloud<pcl::PointXYZ>>("Ground", 10);
         PointCloud = GroundRemovalHandle.advertise<pcl::PointCloud<pcl::PointXYZI>>("ConeCloud", 10);
-        //Subscribe = GroundRemovalHandle.subscribe("rslidar_points", 10, &GroundRemoval::callback, this);
-        Subscribe = GroundRemovalHandle.subscribe("/velodyne_points", 10, &GroundRemoval::callback, this);
+        Subscribe = GroundRemovalHandle.subscribe("rslidar_points", 10, &GroundRemoval::callback, this);
+        // Subscribe = GroundRemovalHandle.subscribe("/velodyne_points", 10, &GroundRemoval::callback, this);
         //timer(GroundRemovalHandle.createTimer(ros::Duration(0.1), &GroundRemoval::main_loop, this));
     }
 
@@ -58,7 +58,7 @@ public:
         // Mandatory
         seg.setModelType (pcl::SACMODEL_PLANE);
         seg.setMethodType (pcl::SAC_RANSAC);
-        seg.setDistanceThreshold (0.05);
+        seg.setDistanceThreshold (0.07);
         pcl::PointCloud<pcl::PointXYZ>::Ptr ground_plane (new pcl::PointCloud<pcl::PointXYZ> ), filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr ground_plane_nan (new pcl::PointCloud<pcl::PointXYZ> ), filtered_cloud_nan (new pcl::PointCloud<pcl::PointXYZ>);
         seg.setInputCloud (pt_cloud);

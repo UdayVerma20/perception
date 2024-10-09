@@ -159,8 +159,7 @@ target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (VoxelDownsample VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Img Img.cpp)
-target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES}
-)
+target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #Clustering
 add_executable (Clustering Clustering/Clustering.cpp)
@@ -179,6 +178,8 @@ add_executable(GroundRemoval GroundRemoval/GroundRemoval.cpp)
 target_link_libraries(GroundRemoval ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Lu GroundRemoval/Lu.cpp)
 target_link_libraries(Lu ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(Amz GroundRemoval/Amz.cpp)
+target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

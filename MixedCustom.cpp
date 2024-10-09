@@ -2,7 +2,6 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <math.h>
 #include <iomanip> // for setw, setfill
-//convert
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -12,10 +11,8 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <pcl/filters/filter.h>
-//publish
-
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/filters/voxel_grid.h>
+// #include <pcl/kdtree/kdtree_flann.h>
+// #include <pcl/filters/voxel_grid.h>
 #include <perception/CoordinateList.h>
 #include <perception/Coordinates.h>
 #include <vector>
@@ -23,31 +20,37 @@
 // #include <pcl/impl/point_types.hpp>
 // #include <pcl/filters/filter.h>
 #include<bits/stdc++.h>
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
-#include <visualization_msgs/MarkerArray.h>
-#include <visualization_msgs/Marker.h>
-#include <pcl/filters/filter.h>
 
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/filters/voxel_grid.h>
-#include <vector>
-#include <cstdlib>
-#include <perception/CoordinateList.h>
-#include <perception/Coordinates.h>
-#include<bits/stdc++.h>
-#define heightlidar 0.34 //0.188
+
+#define LidarHeight 0.34 //0.188
 #define ringlength 0.08 //1.5
 #define sectorangle M_PI/24 //sector angle has to be a multiple of pi/6
 #define startatring 0
-#define planespreadtillring 150
+#define planespreadtillring 160
 #define distancethreshold 0.1 //0.13
 #define lidarframe "rslidar" //"rslidar"
 int markerid = 0;
+
+//ConeCheck
+#define MaxHeight 0.4
+#define MinHeight 0.05
+// #define MinHeight 0.1 //0.2
+// #define MaxPoints 2000
+#define MinPoints 10
+// #define MaxLen 1 //0.7
+#define MaxWidth 0.4
+
+// typedef pcl::PointXYZI pcl::PointXYZI;
+
+//thresholds
+float EuclideanThreshold =  0.4;
+float CentroidThreshold = 0.4;
+
+// struct IntensityCalc{
+//     float Value = 0;
+//     int size = 0;
+// };
 
 ros::Publisher pub;
 // ros::Publisher pub_;
@@ -112,7 +115,7 @@ void visualise(){
       geometry_msgs::Point ringpoint;
       ringpoint.x = i*ringlength*sin(j*M_PI/18 + M_PI/6);
       ringpoint.y = -i*ringlength*cos(j*M_PI/18 + M_PI/6);
-      ringpoint.z = -heightlidar;
+      ringpoint.z = -LidarHeight;
       ringmarker.points.push_back(ringpoint);
     }
     visualisationarray.markers.push_back(ringmarker);
@@ -135,10 +138,10 @@ void visualise(){
     ringmarker.color.a = 1.0;
    
     geometry_msgs::Point sectorpoint1;
-    sectorpoint1.x = 0;sectorpoint1.y=0;sectorpoint1.z=-heightlidar;
+    sectorpoint1.x = 0;sectorpoint1.y=0;sectorpoint1.z=-LidarHeight;
     ringmarker.points.push_back(sectorpoint1);
     geometry_msgs::Point sectorpoint2;
-    sectorpoint2.x = planespreadtillring*ringlength*sin(i*sectorangle + M_PI/6);sectorpoint2.y=-planespreadtillring*ringlength*cos(i*sectorangle + M_PI/6);sectorpoint2.z=-heightlidar;
+    sectorpoint2.x = planespreadtillring*ringlength*sin(i*sectorangle + M_PI/6);sectorpoint2.y=-planespreadtillring*ringlength*cos(i*sectorangle + M_PI/6);sectorpoint2.z=-LidarHeight;
     ringmarker.points.push_back(sectorpoint2);
     visualisationarray.markers.push_back(ringmarker);
   }
@@ -170,29 +173,7 @@ void visualise(){
   marker_pub.publish(visualisationarray);
 }
 
-
-#define LidarSource "rslidar"
-
-//ConeCheck
-#define LidarHeight 0.3
-#define MaxHeight 0.4
-#define MinHeight 0.05
-// #define MinHeight 0.1 //0.2
-// #define MaxPoints 2000
-#define MinPoints 10
-// #define MaxLen 1 //0.7
-#define MaxWidth 0.4
-
-// typedef pcl::PointXYZI pcl::PointXYZI;
-
-//thresholds
-float EuclideanThreshold =  0.4;
-float CentroidThreshold = 0.4;
-
-// struct IntensityCalc{
-//     float Value = 0;
-//     int size = 0;
-// };
+//CLUSTERING
 
 class CustomCluster{
     public:
@@ -278,7 +259,7 @@ public:
     if(angle >=2*M_PI/3|| angle <0) continue;
 
     //trimming view area
-    if((cloudtomanipulate->points)[index].y >2.5 || (cloudtomanipulate->points)[index].y<-1.5) continue;
+    if((cloudtomanipulate->points)[index].y >3 || (cloudtomanipulate->points)[index].y<-4) continue;
 
     //this key starts from 0 from right direction and denotes the bin number. It increases as we move towards left or farther away from lidar
     int key = int((angle)/(sectorangle)) + int((2*M_PI*distance)/(3*sectorangle));
@@ -300,13 +281,13 @@ public:
     pcl::PointXYZI lidarpoint;
     lidarpoint.x = 0.f;
     lidarpoint.y = 0.f;
-    lidarpoint.z = -heightlidar;
+    lidarpoint.z = -LidarHeight;
     for(int i=int(2*M_PI*startatring/(3*sectorangle)); i<int(2*M_PI*(startatring+1)/(3*sectorangle)); i+=2){
     propogate(lidarpoint, i, i+1, startatring);
     }
 
     //visualising
-    visualise();
+    // visualise();
 
     //removing points in the viscinity of the planes
     std::vector<float> coeffs(4, 0);
@@ -335,14 +316,13 @@ public:
 
         perception::CoordinateList Cluster;
         Cluster.header.stamp = ros::Time::now();
-        Cluster.header.frame_id = LidarSource;
+        Cluster.header.frame_id = lidarframe;
         Cluster.size = 0;
         /*perception::Coordinates CurrentCluster;
         CurrentCluster.x = 0;
         CurrentCluster.y= 0;
         CurrentCluster.z= 0;
         Cluster.ConeCoordinates.push_back(CurrentCluster);*/
-        // std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         std::vector<CustomCluster> Clusters_Vector;
         CustomCluster StdCluster(pcl::PointXYZI(0.f));
         Clusters_Vector.push_back(StdCluster);
@@ -350,9 +330,9 @@ public:
         if (nonground->size()!= 0){
             pcl::PointCloud<pcl::PointXYZI>::Ptr cluster_pc (new pcl::PointCloud<pcl::PointXYZI>);
             // pcl::PointCloud<pcl::PointXYZI>::Ptr all_cluster_pc (new pcl::PointCloud<pcl::PointXYZI>);
-            // all_cluster_pc->header.frame_id = LidarSource;
+            // all_cluster_pc->header.frame_id = lidarframe;
             //cluster_pc->push_back(pcl::PointXYZI(0,0,0,0));
-            cluster_pc->header.frame_id = LidarSource;
+            cluster_pc->header.frame_id = lidarframe;
 
             // std::cout<<cluster_indices.size()<<std::endl;
             // std::cout<<"2";
@@ -360,7 +340,7 @@ public:
             // pcl::removeNaNFromPointCloud(*pt_cloud, *pt_cloud, ind);
             // int pointno = 1;
             for (pcl::PointXYZI point : nonground->points) { 
-                // std::cout<<"BBBB"<<pointno++<<std::endl;
+                // std::cout<<"BBBB"<<pointno++<<std::endIter_Cluster.Avg.xl;
                 if (isfinite(point.x) && isfinite(point.y) && isfinite(point.z)){
                     int found_cluster = 0;
                     for (int index = 0; index < Clusters_Vector.size(); index++){
@@ -445,6 +425,7 @@ public:
                 int dist_sq = pow(Iter_Cluster.Avg.x, 2.0) + pow(Iter_Cluster.Avg.y, 2.0) + pow(Iter_Cluster.Avg.z, 2.0);
                 int expected_points = (5000)/(dist_sq + 1); //remove dist =0
                 //(height * width)/(8 * distance^2 * tan(vert.reso/2) * tan(hori.reso/2))
+
                 //std::cout <<std::endl<< maxheight<<minheight<<std::endl;
                 // std::cout <<pow(dist_sq,0.5)<<" "<< expected_points <<" "<< Iter_Cluster.size<<std::endl;
                 // int curr_colour = 1;
@@ -491,12 +472,13 @@ public:
                 (distclusfromground >=0.1 && distclusfromground < 0.22)
                 // && (Iter_Cluster.Avg.z + LidarHeight < MaxHeight)
                 // && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
-                && (maxzfromground >= 0.2 )
+                && (maxzfromground >= 0.21 )
                 // && (minzfromground <= 0.1 )
                 && (Iter_Cluster.clustersize < expected_points)
                 // && (Iter_Cluster.clustersize > 0.13 * expected_points)
                 // && ((Iter_Cluster.Right.y - Iter_Cluster.Left.y)*(Iter_Cluster.Right.y - Iter_Cluster.Left.y) + (Iter_Cluster.Right.x - Iter_Cluster.Left.x)*(Iter_Cluster.Right.x - Iter_Cluster.Left.x) < MaxWidth*MaxWidth)
                 && (Iter_Cluster.clustersize > MinPoints)
+                && (Iter_Cluster.Avg.x*Iter_Cluster.Avg.x + Iter_Cluster.Avg.y*Iter_Cluster.Avg.y < 30)
                 // && (curr_colour == 0)
                 ){
                     Cluster.size++;
@@ -544,14 +526,13 @@ private:
     // ros::Publisher pub;
     ros::Subscriber sub;
     // ros::Publisher All_Clusters_pc;
-    ros::Subscriber Subscribe;       // ROS subscriber for a topic
-    //ros::Timer timer;          // ROS timer for periodic tasks
+    ros::Subscriber Subscribe;
 };
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Clustering");
-ros::NodeHandle ClusteringHandle;
+    ros::NodeHandle ClusteringHandle;
     pub = ClusteringHandle.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ConeCloud", 1);
     // pub_ = ClusteringHandle.advertise<perception::CoordinateList>("Clusters", 1);
     // pub_cloud= ClusteringHandle.advertise<pcl::PointCloud<pcl::PointXYZI>>("ClustersCloud", 1);

@@ -24,7 +24,7 @@
 #define MinHeight 0
 // #define MinHeight 0.1 //0.2
 // #define MaxPoints 2000
-#define MinPoints 10
+#define MinPoints 4
 // #define MaxLen 1 //0.7
 #define MaxWidth 0.5
 
@@ -237,9 +237,9 @@ public:
                 // }
                 // cone check (add gradient) 
                 if (
-                // 1
-                (Iter_Cluster.Avg.z + LidarHeight < MaxHeight)
-                && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
+                1
+                // (Iter_Cluster.Avg.z + LidarHeight < MaxHeight)
+                // && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
                 && (Iter_Cluster.clustersize < expected_points)
                 // && (Iter_Cluster.clustersize > 0.13 * expected_points)
                 // // && (Iter_Cluster.Right.y - Iter_Cluster.Left.y < MaxWidth)

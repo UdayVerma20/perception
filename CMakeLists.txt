@@ -150,12 +150,9 @@ add_definitions(${PCL_DEFINITIONS})
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
+#Extra
 add_executable (SensorFusion SensorFusion.cpp)
 target_link_libraries (SensorFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable (Mixed Mixed.cpp)
-target_link_libraries (Mixed ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable (MixedCustom MixedCustom.cpp)
-target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (VoxelDownsample VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Img Img.cpp)
@@ -178,8 +175,17 @@ add_executable(GroundRemoval GroundRemoval/GroundRemoval.cpp)
 target_link_libraries(GroundRemoval ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Lu GroundRemoval/Lu.cpp)
 target_link_libraries(Lu ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable(Amz GroundRemoval/Amz.cpp)
+
+#Mixed
+add_executable (Mixed Mixed.cpp)
+target_link_libraries (Mixed ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable (MixedCustom MixedCustom.cpp)
+target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(Amz Amz.cpp)
 target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(Amzconcentric Amzconcentric.cpp)
+target_link_libraries(Amzconcentric ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

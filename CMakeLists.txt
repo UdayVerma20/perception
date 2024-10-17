@@ -9,7 +9,7 @@ project(perception)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  #rospy
+  rospy
   std_msgs
   message_generation
   pcl_conversions
@@ -18,13 +18,13 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_msgs
   sensor_msgs
   geometry_msgs
-  cv_bridge
-  image_transport
+  # cv_bridge
+  # image_transport
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL 1.2 REQUIRED)
-find_package(OpenCV REQUIRED)
+# find_package(OpenCV REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -81,7 +81,6 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   sensor_msgs
-  geometry_msgs
 )
 
 ################################################
@@ -116,7 +115,9 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES perception
-  CATKIN_DEPENDS message_runtime geometry_msgs roscpp std_msgs sensor_msgs cv_bridge image_transport
+  CATKIN_DEPENDS message_runtime 
+  roscpp std_msgs sensor_msgs rospy
+  # geometry_msgs  cv_bridge image_transport
 #  DEPENDS system_lib
 )
 
@@ -130,7 +131,7 @@ include_directories(
  #include
  ${catkin_INCLUDE_DIRS}
  ${PCL_INCLUDE_DIRS}
- ${OpenCV_INCLUDE_DIRS}
+#  ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(${PCL_LIBRARY_DIRS})
@@ -151,12 +152,14 @@ add_definitions(${PCL_DEFINITIONS})
 ## The recommended prefix ensures that target names across packages don't collide
 
 #Extra
+add_executable (reconstruction reconstruction.cpp)
+target_link_libraries (reconstruction ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (SensorFusion SensorFusion.cpp)
 target_link_libraries (SensorFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (VoxelDownsample VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable(Img Img.cpp)
-target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+# add_executable(Img Img.cpp)
+# target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #Clustering
 add_executable (Clustering Clustering/Clustering.cpp)

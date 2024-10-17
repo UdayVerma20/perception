@@ -49,6 +49,8 @@ class CustomCluster{
     PointType Last;
     PointType Left;
     PointType Right;
+    pcl::PointXYZI minheight;
+    pcl::PointXYZI maxheight;
     // std::map<float,IntensityCalc> gradient;
     // float minheight;
     // float maxheight ;
@@ -170,6 +172,12 @@ public:
                             // int non0size = 1>Iter_Cluster.clustersize?1:Iter_Cluster.clustersize;
                             // Clusters_Vector[index].PointsArr[current_size] = point;
                             found_cluster++;
+                            if (Iter_Cluster.minheight.z > point.z){
+                                Clusters_Vector[index].minheight = point;
+                            }
+                            if (Iter_Cluster.maxheight.z < point.z){
+                                Clusters_Vector[index].maxheight = point;
+                            }
                             // std::cout<<found_cluster<<"a";
                             // all_cluster_pc->push_back(point);
                             // std::cout<<Iter_Cluster.clustersize;
@@ -251,6 +259,12 @@ public:
                     CurrentCluster.x = Iter_Cluster.Avg.x;
                     CurrentCluster.y = Iter_Cluster.Avg.y;
                     CurrentCluster.z = Iter_Cluster.Avg.z;
+                    CurrentCluster.size = Iter_Cluster.clustersize;
+                    CurrentCluster.left = {Iter_Cluster.Left.x, Iter_Cluster.Left.y, Iter_Cluster.Left.z};
+                    CurrentCluster.right = {Iter_Cluster.Right.x, Iter_Cluster.Right.y, Iter_Cluster.Right.z};
+                    CurrentCluster.top = {Iter_Cluster.maxheight.x, Iter_Cluster.maxheight.y, Iter_Cluster.maxheight.z};
+                    CurrentCluster.bottom = {Iter_Cluster.minheight.x, Iter_Cluster.minheight.y, Iter_Cluster.minheight.z};
+                    
                     // CurrentCluster.colour = curr_colour;
                     std::cout << "Cone " <<Iter_Cluster.clustersize<<" "//<<curr_colour<<" "
                     <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;

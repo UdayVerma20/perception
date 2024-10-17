@@ -178,14 +178,16 @@ add_executable(GroundRemoval GroundRemoval/GroundRemoval.cpp)
 target_link_libraries(GroundRemoval ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Lu GroundRemoval/Lu.cpp)
 target_link_libraries(Lu ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(Amz GroundRemoval/Amz.cpp)
+target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 #Mixed
 add_executable (Mixed Mixed.cpp)
 target_link_libraries (Mixed ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (MixedCustom MixedCustom.cpp)
 target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable(Amz Amz.cpp)
-target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(AmzCluster AmzCluster.cpp)
+target_link_libraries(AmzCluster ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Amzconcentric Amzconcentric.cpp)
 target_link_libraries(Amzconcentric ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 

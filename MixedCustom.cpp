@@ -187,7 +187,7 @@ class CustomCluster{
     pcl::PointXYZI Right;
     // std::map<float,IntensityCalc> gradient;
     pcl::PointXYZI minheight;
-    pcl::PointXYZI maxheight ;
+    pcl::PointXYZI maxheight;
     // float left;
     // float right ;
     // pcl::PointXYZI PointsArr[11000];  //Don't stor points in vector, too slow
@@ -486,6 +486,11 @@ public:
                     CurrentCluster.x = Iter_Cluster.Avg.x;
                     CurrentCluster.y = Iter_Cluster.Avg.y;
                     CurrentCluster.z = Iter_Cluster.Avg.z;
+                    CurrentCluster.size = Iter_Cluster.clustersize;
+                    CurrentCluster.left = {Iter_Cluster.Left.x, Iter_Cluster.Left.y, Iter_Cluster.Left.z};
+                    CurrentCluster.right = {Iter_Cluster.Right.x, Iter_Cluster.Right.y, Iter_Cluster.Right.z};
+                    CurrentCluster.top = {Iter_Cluster.maxheight.x, Iter_Cluster.maxheight.y, Iter_Cluster.maxheight.z};
+                    CurrentCluster.bottom = {Iter_Cluster.minheight.x, Iter_Cluster.minheight.y, Iter_Cluster.minheight.z};
                     // CurrentCluster.colour = curr_colour;
                     std::cout << "Cone " <<Iter_Cluster.clustersize<<" "//<<curr_colour<<" "
                     <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;

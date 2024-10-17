@@ -24,20 +24,33 @@ struct Coordinates_
   typedef Coordinates_<ContainerAllocator> Type;
 
   Coordinates_()
-    : x(0.0)
+    : size(0)
+    , x(0.0)
     , y(0.0)
     , z(0.0)
-    , colour(0.0)  {
+    , colour(0.0)
+    , left()
+    , right()
+    , top()
+    , bottom()  {
     }
   Coordinates_(const ContainerAllocator& _alloc)
-    : x(0.0)
+    : size(0)
+    , x(0.0)
     , y(0.0)
     , z(0.0)
-    , colour(0.0)  {
+    , colour(0.0)
+    , left(_alloc)
+    , right(_alloc)
+    , top(_alloc)
+    , bottom(_alloc)  {
   (void)_alloc;
     }
 
 
+
+   typedef uint8_t _size_type;
+  _size_type size;
 
    typedef float _x_type;
   _x_type x;
@@ -50,6 +63,18 @@ struct Coordinates_
 
    typedef float _colour_type;
   _colour_type colour;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _left_type;
+  _left_type left;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _right_type;
+  _right_type right;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _top_type;
+  _top_type top;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _bottom_type;
+  _bottom_type bottom;
 
 
 
@@ -80,10 +105,15 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::perception::Coordinates_<ContainerAllocator1> & lhs, const ::perception::Coordinates_<ContainerAllocator2> & rhs)
 {
-  return lhs.x == rhs.x &&
+  return lhs.size == rhs.size &&
+    lhs.x == rhs.x &&
     lhs.y == rhs.y &&
     lhs.z == rhs.z &&
-    lhs.colour == rhs.colour;
+    lhs.colour == rhs.colour &&
+    lhs.left == rhs.left &&
+    lhs.right == rhs.right &&
+    lhs.top == rhs.top &&
+    lhs.bottom == rhs.bottom;
 }
 
 template<typename ContainerAllocator1, typename ContainerAllocator2>
@@ -116,12 +146,12 @@ struct IsMessage< ::perception::Coordinates_<ContainerAllocator> const>
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::perception::Coordinates_<ContainerAllocator> >
-  : TrueType
+  : FalseType
   { };
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::perception::Coordinates_<ContainerAllocator> const>
-  : TrueType
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -140,12 +170,12 @@ struct MD5Sum< ::perception::Coordinates_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "57cc1fa03d63bd8befee1efa83369c47";
+    return "b8599605dfd6ead8f2862bed579ca23c";
   }
 
   static const char* value(const ::perception::Coordinates_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x57cc1fa03d63bd8bULL;
-  static const uint64_t static_value2 = 0xefee1efa83369c47ULL;
+  static const uint64_t static_value1 = 0xb8599605dfd6ead8ULL;
+  static const uint64_t static_value2 = 0xf2862bed579ca23cULL;
 };
 
 template<class ContainerAllocator>
@@ -164,10 +194,15 @@ struct Definition< ::perception::Coordinates_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "float32 x\n"
+    return "uint8 size\n"
+"float32 x\n"
 "float32 y\n"
 "float32 z\n"
 "float32 colour\n"
+"float32[] left\n"
+"float32[] right\n"
+"float32[] top\n"
+"float32[] bottom\n"
 ;
   }
 
@@ -186,10 +221,15 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
+      stream.next(m.size);
       stream.next(m.x);
       stream.next(m.y);
       stream.next(m.z);
       stream.next(m.colour);
+      stream.next(m.left);
+      stream.next(m.right);
+      stream.next(m.top);
+      stream.next(m.bottom);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -208,6 +248,8 @@ struct Printer< ::perception::Coordinates_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::perception::Coordinates_<ContainerAllocator>& v)
   {
+    s << indent << "size: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.size);
     s << indent << "x: ";
     Printer<float>::stream(s, indent + "  ", v.x);
     s << indent << "y: ";
@@ -216,6 +258,30 @@ struct Printer< ::perception::Coordinates_<ContainerAllocator> >
     Printer<float>::stream(s, indent + "  ", v.z);
     s << indent << "colour: ";
     Printer<float>::stream(s, indent + "  ", v.colour);
+    s << indent << "left[]" << std::endl;
+    for (size_t i = 0; i < v.left.size(); ++i)
+    {
+      s << indent << "  left[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.left[i]);
+    }
+    s << indent << "right[]" << std::endl;
+    for (size_t i = 0; i < v.right.size(); ++i)
+    {
+      s << indent << "  right[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.right[i]);
+    }
+    s << indent << "top[]" << std::endl;
+    for (size_t i = 0; i < v.top.size(); ++i)
+    {
+      s << indent << "  top[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.top[i]);
+    }
+    s << indent << "bottom[]" << std::endl;
+    for (size_t i = 0; i < v.bottom.size(); ++i)
+    {
+      s << indent << "  bottom[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.bottom[i]);
+    }
   }
 };
 

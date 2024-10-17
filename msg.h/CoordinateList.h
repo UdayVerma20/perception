@@ -136,12 +136,12 @@ struct MD5Sum< ::perception::CoordinateList_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "d5e39d88f56d2702ca2aa96a43190efe";
+    return "e9e99c4fac123aecb27d3f203bb97ba2";
   }
 
   static const char* value(const ::perception::CoordinateList_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xd5e39d88f56d2702ULL;
-  static const uint64_t static_value2 = 0xca2aa96a43190efeULL;
+  static const uint64_t static_value1 = 0xe9e99c4fac123aecULL;
+  static const uint64_t static_value2 = 0xb27d3f203bb97ba2ULL;
 };
 
 template<class ContainerAllocator>
@@ -182,10 +182,15 @@ struct Definition< ::perception::CoordinateList_<ContainerAllocator> >
 "\n"
 "================================================================================\n"
 "MSG: perception/Coordinates\n"
+"uint8 size\n"
 "float32 x\n"
 "float32 y\n"
 "float32 z\n"
 "float32 colour\n"
+"float32[] left\n"
+"float32[] right\n"
+"float32[] top\n"
+"float32[] bottom\n"
 ;
   }
 

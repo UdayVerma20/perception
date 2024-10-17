@@ -22,12 +22,12 @@
 #include<bits/stdc++.h>
 #include <pcl_ros/point_cloud.h>
 
-#define heightlidar 0.4 //0.188
-#define ringlength 0.05 //1.5
-#define sectorangle M_PI/24 //sector angle has to be a multiple of pi/6
+#define heightlidar 0.25 //0.188
+#define ringlength 0.4 //1.5
+#define sectorangle M_PI/768 //sector angle has to be a multiple of pi/6
 #define startatring 0
-#define planespreadtillring 100
-#define distancethreshold 0.1 //0.13
+#define planespreadtillring 50
+#define ringthreshold 0.1 //0.13
 #define lidarframe "rslidar" //"rslidar"
 
 int markerid = 0;
@@ -55,51 +55,57 @@ float CentroidThreshold = 0.4;
 ros::Publisher pub;
 ros::Publisher marker_pub;
 std::unordered_map<int, pcl::PointXYZI> bin_min_points;
-std::unordered_map<int, float> line;
+std::unordered_map<int, std::vector<float>> line;
 
 pcl::PointXYZI lidarpoint;
 
 void
-propogate (float lastpoint, int sector, int ringcount, int numberofpoints){
-  if(sector>=8){
-    line[ringcount] = lastpoint;
+propogate (pcl::PointXYZI lastpoint, int sector, int ringcount, int numberofpoints){
+  if(ringcount>=planespreadtillring){
+    if(lastpoint.x==lidarpoint.x && lastpoint.y==lidarpoint.y && lastpoint.y==lidarpoint.y){
+      lastpoint.x = lidarpoint.x + planespreadtillring*ringlength*cos((sector*sectorangle)+M_PI/6);
+      lastpoint.y = lidarpoint.y + planespreadtillring*ringlength*sin((sector*sectorangle)+M_PI/6);
+    }
+    line[sector] = {lastpoint.x, lastpoint.y, lastpoint.z};
     return;
   }
   if(bin_min_points.find(ringcount*(2*M_PI/(3*sectorangle)) + sector)!=bin_min_points.end()){
     numberofpoints++;
-    float avgpointz = ((float)(lastpoint*(numberofpoints) + bin_min_points[ringcount*(2*M_PI/(3*sectorangle)) + sector].z))/((float)(numberofpoints+1));
-    lastpoint = avgpointz;
+    float avgpointx = ((float)(lastpoint.x*(numberofpoints) + bin_min_points[ringcount*(2*M_PI/(3*sectorangle)) + sector].x))/((float)(numberofpoints + 1));
+    float avgpointy = ((float)(lastpoint.y*(numberofpoints) + bin_min_points[ringcount*(2*M_PI/(3*sectorangle)) + sector].y))/((float)(numberofpoints + 1));
+    float avgpointz = ((float)(lastpoint.z*(numberofpoints) + bin_min_points[ringcount*(2*M_PI/(3*sectorangle)) + sector].z))/((float)(numberofpoints + 1));
+    lastpoint.x = avgpointx; lastpoint.y = avgpointy; lastpoint.z = avgpointz;
   }
 
-  propogate(lastpoint, sector+1, ringcount, numberofpoints);
+  propogate(lastpoint, sector, ringcount+1, numberofpoints);
 }
 
 void visualise(){
   visualization_msgs::MarkerArray visualisationarray;
   //making rings
-//   for(int i=0; i<planespreadtillring; i++){
-//     visualization_msgs::Marker ringmarker;
-//     ringmarker.header.frame_id = lidarframe;
-//     ringmarker.header.stamp = ros::Time::now();
-//     ringmarker.ns = "basic_shapes";
-//     ringmarker.id = markerid++;
-//     ringmarker.type = visualization_msgs::Marker::LINE_STRIP;
-//     ringmarker.action = visualization_msgs::Marker::ADD;
-//     ringmarker.lifetime = ros::Duration(0.1);
+  // for(int i=0; i<planespreadtillring; i++){
+  //   visualization_msgs::Marker ringmarker;
+  //   ringmarker.header.frame_id = lidarframe;
+  //   ringmarker.header.stamp = ros::Time::now();
+  //   ringmarker.ns = "basic_shapes";
+  //   ringmarker.id = markerid++;
+  //   ringmarker.type = visualization_msgs::Marker::LINE_STRIP;
+  //   ringmarker.action = visualization_msgs::Marker::ADD;
+  //   ringmarker.lifetime = ros::Duration(0.1);
 
-//     ringmarker.pose.orientation.w=1.0;
-//     ringmarker.scale.x = 0.005;
-//     ringmarker.color.r = 1.0;
-//     ringmarker.color.a = 1.0;
-//     for(int j=0; j<13; j++){
-//       geometry_msgs::Point ringpoint;
-//       ringpoint.x = i*ringlength*sin(j*M_PI/18 + M_PI/6);
-//       ringpoint.y = -i*ringlength*cos(j*M_PI/18 + M_PI/6);
-//       ringpoint.z = -heightlidar;
-//       ringmarker.points.push_back(ringpoint);
-//     }
-//     visualisationarray.markers.push_back(ringmarker);
-//   }
+  //   ringmarker.pose.orientation.w=1.0;
+  //   ringmarker.scale.x = 0.005;
+  //   ringmarker.color.r = 1.0;
+  //   ringmarker.color.a = 1.0;
+  //   for(int j=0; j<13; j++){
+  //     geometry_msgs::Point ringpoint;
+  //     ringpoint.x = i*ringlength*sin(j*M_PI/18 + M_PI/6);
+  //     ringpoint.y = -i*ringlength*cos(j*M_PI/18 + M_PI/6);
+  //     ringpoint.z = -heightlidar;
+  //     ringmarker.points.push_back(ringpoint);
+  //   }
+  //   visualisationarray.markers.push_back(ringmarker);
+  // }
 
   // //making sectors
   // for(int i=0; i<=2*M_PI/(3*sectorangle); i++){
@@ -126,8 +132,9 @@ void visualise(){
   //   visualisationarray.markers.push_back(ringmarker);
   // }
 
-  for(int i=startatring; i<planespreadtillring; i++){
-    if (line.find(i)==line.end()) continue;
+  // making planes
+  for(int i=0; i<2*M_PI/(3*sectorangle); i++){
+    if(line.find(i)==line.end()) continue;
     visualization_msgs::Marker ringmarker;
     ringmarker.header.frame_id = lidarframe;
     ringmarker.header.stamp = ros::Time::now();
@@ -141,14 +148,13 @@ void visualise(){
     ringmarker.scale.x = 0.005;
     ringmarker.color.r = 1.0;
     ringmarker.color.a = 1.0;
-    
-    for(int j=0; j<13; j++){
-      geometry_msgs::Point ringpoint;
-      ringpoint.x = i*ringlength*sin(j*M_PI/18 + M_PI/6);
-      ringpoint.y = -i*ringlength*cos(j*M_PI/18 + M_PI/6);
-      ringpoint.z = line[i];
-      ringmarker.points.push_back(ringpoint);
-    }
+   
+    geometry_msgs::Point sectorpoint1;
+    sectorpoint1.x = lidarpoint.x; sectorpoint1.y=lidarpoint.y; sectorpoint1.z=lidarpoint.z;
+    ringmarker.points.push_back(sectorpoint1);
+    geometry_msgs::Point sectorpoint2;
+    sectorpoint2.x = planespreadtillring*ringlength*(line[i][0] - lidarpoint.x) + lidarpoint.x ;sectorpoint2.y= planespreadtillring*ringlength*(line[i][1] - lidarpoint.y) + lidarpoint.y  ; planespreadtillring*ringlength*(line[i][2] - lidarpoint.z) + lidarpoint.z ;
+    ringmarker.points.push_back(sectorpoint2);
     visualisationarray.markers.push_back(ringmarker);
   }
 
@@ -235,8 +241,9 @@ public:
   for(int index=0; index<cloudtomanipulate->points.size(); index++){
 
     //trimming view area
-    if((cloudtomanipulate->points)[index].y >2.0 || (cloudtomanipulate->points)[index].y<-2.0) continue;
-    if((cloudtomanipulate->points)[index].z >0.5) continue;
+    // if((cloudtomanipulate->points)[index].y >2.0 || (cloudtomanipulate->points)[index].y<-2.0) continue;
+    // //cutoff
+    // if((cloudtomanipulate->points)[index].z >0.5) continue;
 
     int ring = pow(pow((cloudtomanipulate->points)[index].x, 2)+pow((cloudtomanipulate->points)[index].y, 2), 0.5)/ringlength;
     if(ring>=planespreadtillring) continue;
@@ -257,8 +264,8 @@ public:
   }
  
   //propogating the planes in all the bins
-  for(int i=startatring; i<planespreadtillring; i++){
-    propogate(-heightlidar, 0, i, 0);
+  for(int i=int(2*M_PI*startatring/(3*sectorangle)); i<int(2*M_PI*(startatring+1)/(3*sectorangle)); i++){
+    propogate(lidarpoint, i, startatring, 0);
   }
 
   visualise();
@@ -269,23 +276,38 @@ public:
   for(int index=0; index<cloudtomanipulate->points.size(); index++){
 
     //trimming view area
-    if((cloudtomanipulate->points)[index].y >2.0 || (cloudtomanipulate->points)[index].y<-2.0) continue;
-    if((cloudtomanipulate->points)[index].z >0.5) continue;
-
+    // if((cloudtomanipulate->points)[index].y >2.0 || (cloudtomanipulate->points)[index].y<-2.0) continue;
+    // if((cloudtomanipulate->points)[index].z >0.5) continue;
     int ring = pow(pow((cloudtomanipulate->points)[index].x, 2)+pow((cloudtomanipulate->points)[index].y, 2), 0.5)/ringlength;
     if(ring>=planespreadtillring) continue;
     float angle = atan2((cloudtomanipulate->points)[index].x, -(cloudtomanipulate->points)[index].y) - M_PI/6;
     if(angle >=2*M_PI/3|| angle <0) continue;
+    int key = int((angle)/(sectorangle));
+    if(line.find(key)==line.end()) continue;
+    float denominator = pow(pow(lidarpoint.x-line[key][0], 2) + pow(lidarpoint.y-line[key][1], 2) + pow(lidarpoint.z-line[key][2], 2), 0.5);
+    float term1 = pow((line[key][1] - lidarpoint.y)*((cloudtomanipulate->points)[index].z - lidarpoint.z) - (line[key][2]-lidarpoint.z)*((cloudtomanipulate->points)[index].y-lidarpoint.y), 2);
+    float term2 = pow((line[key][2] - lidarpoint.z)*((cloudtomanipulate->points)[index].x - lidarpoint.x) - (line[key][0]-lidarpoint.x)*((cloudtomanipulate->points)[index].z-lidarpoint.z), 2);
+    float term3 = pow((line[key][0] - lidarpoint.x)*((cloudtomanipulate->points)[index].y - lidarpoint.y) - (line[key][1]-lidarpoint.y)*((cloudtomanipulate->points)[index].x-lidarpoint.x), 2);
+    float distance = (pow(term1 + term2 + term3, 0.5))/(denominator);
 
-    float distance = abs(line[ring]-(cloudtomanipulate->points)[index].z);
-    if(distance>distancethreshold) nonground->push_back((cloudtomanipulate->points)[index]);
+    if(distance>ringthreshold) nonground->push_back((cloudtomanipulate->points)[index]);
 
   }
+
   // Publish the data.
   ROS_INFO("Publishing to nogroundcloud");
+  // int count=0;
+  // for (auto i:line){
+  //   count++;
+  //   // std::cout << i.first << ": " << i.second[0] << " " << i.second[1] << " "<< i.second[2] << std::endl;
+  // }
+  // std::cout << count << std::endl;
+
+
+  
   // ros::Rate rate(4);
   pub.publish (*nonground);
-
+ 
         perception::CoordinateList Cluster;
         Cluster.header.stamp = ros::Time::now();
         Cluster.header.frame_id = lidarframe;
@@ -390,9 +412,11 @@ public:
             // std::cout<<Clusters_Vector.size()<<std::endl;
             cluster_pc->width = Clusters_Vector.size();
             cluster_pc->height = 1;
-            cluster_pc->push_back(pcl::PointXYZI(0.f));
+            // cluster_pc->push_back(pcl::PointXYZI(0.f));
+            float denominator; float term1; float term2; float term3;
             for (int index = 0; index < Clusters_Vector.size(); index++){
                 CustomCluster Iter_Cluster = Clusters_Vector[index];
+                if (Iter_Cluster.Avg.x == 0.0 && Iter_Cluster.Avg.y == 0.0 && Iter_Cluster.Avg.z == 0.0 ) continue;
                 int dist_sq = pow(Iter_Cluster.Avg.x, 2.0) + pow(Iter_Cluster.Avg.y, 2.0) + pow(Iter_Cluster.Avg.z, 2.0);
                 int expected_points = (5000)/(dist_sq + 1); //remove dist =0
                 //(height * width)/(8 * distance^2 * tan(vert.reso/2) * tan(hori.reso/2))
@@ -424,23 +448,47 @@ public:
 
 
                 //checking cone distance from amz lines
+                // std::cout<<"Cone"<<std::endl;
+                float angleclus = atan2(Iter_Cluster.Avg.x, -Iter_Cluster.Avg.y) - M_PI/6;
+                int key = int((angleclus)/(sectorangle));
+                if(line.find(key)==line.end()){
+                  std::cout << angleclus << std::endl;
+                  std::cout << sectorangle << std::endl;
+                  std::cout << key << std::endl;
+                  std::cout << "bruh "<<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl;
+                  cluster_pc->push_back(Iter_Cluster.Avg);
+                  perception::Coordinates CurrentCluster;
+                    CurrentCluster.x = Iter_Cluster.Avg.x;
+                    CurrentCluster.y = Iter_Cluster.Avg.y;
+                    CurrentCluster.z = Iter_Cluster.Avg.z;
+                  Cluster.ConeCoordinates.push_back(CurrentCluster);
 
-                int ringclus = pow(pow(Iter_Cluster.Avg.x, 2)+pow(Iter_Cluster.Avg.y, 2), 0.5)/ringlength;
-                float distance = abs(line[ringclus]-Iter_Cluster.Avg.z);
+                }
+                denominator = pow(pow(lidarpoint.x-line[key][0], 2) + pow(lidarpoint.y-line[key][1], 2) + pow(lidarpoint.z-line[key][2], 2), 0.5);
+                term1 = pow((line[key][1] - lidarpoint.y)*(Iter_Cluster.Avg.z - lidarpoint.z) - (line[key][2]-lidarpoint.z)*(Iter_Cluster.Avg.y-lidarpoint.y), 2);
+                term2 = pow((line[key][2] - lidarpoint.z)*(Iter_Cluster.Avg.x - lidarpoint.x) - (line[key][0]-lidarpoint.x)*(Iter_Cluster.Avg.z-lidarpoint.z), 2);
+                term3 = pow((line[key][0] - lidarpoint.x)*(Iter_Cluster.Avg.y - lidarpoint.y) - (line[key][1]-lidarpoint.y)*(Iter_Cluster.Avg.x-lidarpoint.x), 2);
+                float distance = (pow(term1 + term2 + term3, 0.5))/(denominator);
 
-                ringclus = pow(pow(Iter_Cluster.maxheight.x, 2)+pow(Iter_Cluster.maxheight.y, 2), 0.5)/ringlength;
-                float maxzfromground = abs(line[ringclus]-Iter_Cluster.maxheight.z);
+                denominator = pow(pow(lidarpoint.x-line[key][0], 2) + pow(lidarpoint.y-line[key][1], 2) + pow(lidarpoint.z-line[key][2], 2), 0.5);
+                term1 = pow((line[key][1] - lidarpoint.y)*(Iter_Cluster.minheight.z - lidarpoint.z) - (line[key][2]-lidarpoint.z)*(Iter_Cluster.minheight.y-lidarpoint.y), 2);
+                term2 = pow((line[key][2] - lidarpoint.z)*(Iter_Cluster.minheight.x - lidarpoint.x) - (line[key][0]-lidarpoint.x)*(Iter_Cluster.minheight.z-lidarpoint.z), 2);
+                term3 = pow((line[key][0] - lidarpoint.x)*(Iter_Cluster.minheight.y - lidarpoint.y) - (line[key][1]-lidarpoint.y)*(Iter_Cluster.minheight.x-lidarpoint.x), 2);
+                float minzfromground = (pow(term1 + term2 + term3, 0.5))/(denominator);
 
-                ringclus = pow(pow(Iter_Cluster.minheight.x, 2)+pow(Iter_Cluster.minheight.y, 2), 0.5)/ringlength;
-                float minzfromground = abs(line[ringclus]-Iter_Cluster.minheight.z);
+                denominator = pow(pow(lidarpoint.x-line[key][0], 2) + pow(lidarpoint.y-line[key][1], 2) + pow(lidarpoint.z-line[key][2], 2), 0.5);
+                term1 = pow((line[key][1] - lidarpoint.y)*(Iter_Cluster.maxheight.z - lidarpoint.z) - (line[key][2]-lidarpoint.z)*(Iter_Cluster.maxheight.y-lidarpoint.y), 2);
+                term2 = pow((line[key][2] - lidarpoint.z)*(Iter_Cluster.maxheight.x - lidarpoint.x) - (line[key][0]-lidarpoint.x)*(Iter_Cluster.maxheight.z-lidarpoint.z), 2);
+                term3 = pow((line[key][0] - lidarpoint.x)*(Iter_Cluster.maxheight.y - lidarpoint.y) - (line[key][1]-lidarpoint.y)*(Iter_Cluster.maxheight.x-lidarpoint.x), 2);
+                float maxzfromground = (pow(term1 + term2 + term3, 0.5))/(denominator);
 
                 if ( //checks
-                1
-                // (distance >=0.1 && distance < 0.22)
+                // 1
+                (distance >=0.1 && distance < 0.22)
                 // && (Iter_Cluster.Avg.z + LidarHeight < MaxHeight)
                 // && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
-                // && (maxzfromground >= 0.21 )
-                // && (/minzfromground <= 0.1 )
+                && (maxzfromground >= 0.26 )
+                && (minzfromground <= 0.17 )
                 // && (Iter_Cluster.clustersize < expected_points)
                 // && (Iter_Cluster.clustersize > 0.13 * expected_points)
                 // && ((Iter_Cluster.Right.y - Iter_Cluster.Left.y)*(Iter_Cluster.Right.y - Iter_Cluster.Left.y) + (Iter_Cluster.Right.x - Iter_Cluster.Left.x)*(Iter_Cluster.Right.x - Iter_Cluster.Left.x) < MaxWidth*MaxWidth)
@@ -460,7 +508,9 @@ public:
                     CurrentCluster.bottom = {Iter_Cluster.minheight.x, Iter_Cluster.minheight.y, Iter_Cluster.minheight.z};
                     // CurrentCluster.colour = curr_colour;
                     std::cout << "Cone " <<Iter_Cluster.clustersize<<" "//<<curr_colour<<" "
-                    <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;
+                    <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z
+                    <<" "<<distance <<" "<<minzfromground<<" "<<maxzfromground
+                    <<" "<<std::endl; 
                     Cluster.ConeCoordinates.push_back(CurrentCluster);
                     cluster_pc->push_back(Iter_Cluster.Avg);
                 
@@ -503,7 +553,7 @@ private:
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "Amzconcentric");
+    ros::init(argc, argv, "Amz");
     ros::NodeHandle ClusteringHandle;
     pub = ClusteringHandle.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ConeCloud", 1);
     // pub_ = ClusteringHandle.advertise<perception::CoordinateList>("Clusters", 1);

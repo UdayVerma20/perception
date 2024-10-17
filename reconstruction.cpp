@@ -20,16 +20,13 @@ using namespace std;
 #define lengthcuboid 0.1 //front and back of cone
 #define widthcuboid 0.2 //side to side of cone
 
-vector<vector<float>> clusters;
+perception::CoordinateList clusters;
 ros::Publisher reconground;
 ros::Publisher reconcluster;
 
 void cluster_cb (perception::CoordinateList inputclusters)
 {
-  clusters.clear();
-  for(auto i:inputclusters.ConeCoordinates){
-    clusters.push_back({i.x, i.y, i.z});
-  }
+  clusters = inputclusters;
 }
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
@@ -39,15 +36,31 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloudtomanipulate(new pcl::PointCloud<pcl::PointXYZI>);
   pcl::fromROSMsg (*input, *cloudtomanipulate);
   for(int index=0; index<cloudtomanipulate->points.size(); index++){
-    for(auto i:clusters){
-        if((cloudtomanipulate->points)[index].x >= i[0] - lengthcuboid && (cloudtomanipulate->points)[index].x <= i[0] + lengthcuboid
-        && (cloudtomanipulate->points)[index].y >= i[1] - widthcuboid && (cloudtomanipulate->points)[index].y <= i[1] + widthcuboid
-        && (cloudtomanipulate->points)[index].z >= i[2] - heightcuboid && (cloudtomanipulate->points)[index].z <= i[2] + heightcuboid        
-        ) reconstructedcloud->push_back((cloudtomanipulate->points)[index]);
+    for(int cluster_index = 0; cluster_index < clusters.size; cluster_index++){
+        if((cloudtomanipulate->points)[index].x >= clusters.ConeCoordinates[cluster_index].x - lengthcuboid && (cloudtomanipulate->points)[index].x <= clusters.ConeCoordinates[cluster_index].x + lengthcuboid
+        && (cloudtomanipulate->points)[index].y >= clusters.ConeCoordinates[cluster_index].y - widthcuboid && (cloudtomanipulate->points)[index].y <= clusters.ConeCoordinates[cluster_index].y + widthcuboid
+        && (cloudtomanipulate->points)[index].z >= clusters.ConeCoordinates[cluster_index].z - heightcuboid && (cloudtomanipulate->points)[index].z <= clusters.ConeCoordinates[cluster_index].z + heightcuboid        
+        ) {
+            reconstructedcloud->push_back((cloudtomanipulate->points)[index]);
+            clusters.ConeCoordinates[cluster_index].size++;
+            if (clusters.ConeCoordinates[cluster_index].left[1] > (cloudtomanipulate->points)[index].y){
+                clusters.ConeCoordinates[cluster_index].left = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            }
+            if (clusters.ConeCoordinates[cluster_index].right[1] < (cloudtomanipulate->points)[index].y){
+                clusters.ConeCoordinates[cluster_index].right = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            }
+            if (clusters.ConeCoordinates[cluster_index].top[2] < (cloudtomanipulate->points)[index].z){
+                clusters.ConeCoordinates[cluster_index].top = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            }
+            if (clusters.ConeCoordinates[cluster_index].bottom[2] > (cloudtomanipulate->points)[index].y){
+                clusters.ConeCoordinates[cluster_index].left = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            }
+        }
     }
   }
-  ROS_INFO("Publishing to ReconstructedGround");
+  ROS_INFO("Publishing to ReconstructedGround & ReconstructedCluster");
   reconground.publish (*reconstructedcloud);
+  reconcluster.publish(clusters);
 }
 
 int main(int argc, char **argv)

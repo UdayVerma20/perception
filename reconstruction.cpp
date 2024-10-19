@@ -23,6 +23,7 @@ using namespace std;
 perception::CoordinateList clusters;
 ros::Publisher reconground;
 ros::Publisher reconcluster;
+ros::Publisher reconclusterpc;
 
 void cluster_cb (perception::CoordinateList inputclusters)
 {
@@ -58,9 +59,43 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
         }
     }
   }
-  ROS_INFO("Publishing to ReconstructedGround & ReconstructedCluster");
+  ROS_INFO("Publishing to ReconstructedGround");
   reconground.publish (*reconstructedcloud);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr reconstructedcluster(new pcl::PointCloud<pcl::PointXYZI>);
+  reconstructedcluster->header.frame_id = lidarframe;
+  reconstructedcluster->push_back(pcl::PointXYZI(0.f));
+  for (int i = 0; i < clusters.size; i++){
+    perception::Coordinates Iter_Cluster = clusters.ConeCoordinates[i];
+    int dist_sq = pow(Iter_Cluster.x, 2.0) + pow(Iter_Cluster.y, 2.0) + pow(Iter_Cluster.z, 2.0);
+    int expected_points = (5000)/(dist_sq + 1);
+    if ( //checks
+    0
+    // // (distclusfromground >=0.1 && distclusfromground < 0.22)
+    // // && (Iter_Cluster.z + LidarHeight < MaxHeight)
+    // // && (Iter_Cluster.z + LidarHeight > MinHeight)
+    // // && (maxzfromground >= 0.21 )
+    // // && (minzfromground <= 0.1 )
+    // && (Iter_Cluster.size < expected_points)
+    // && (Iter_Cluster.size > 0.1 * expected_points)
+    // && ((Iter_Cluster.right[1] - Iter_Cluster.left[1])*(Iter_Cluster.right[1] - Iter_Cluster.left[1]) + (Iter_Cluster.right[0] - Iter_Cluster.left[0])*(Iter_Cluster.right[0] - Iter_Cluster.left[0]) < MaxWidth*MaxWidth)
+    // && (Iter_Cluster.size > MinPoints)
+    // && (Iter_Cluster.x*Iter_Cluster.x + Iter_Cluster.y*Iter_Cluster.y < 30)
+    // && (curr_colour == 0)
+    ){
+      pcl::PointXYZI point;
+      point.x = Iter_Cluster.x;
+      point.y = Iter_Cluster.y;
+      point.z = Iter_Cluster.z;
+      reconstructedcluster->push_back(point);
+    }
+    else{
+      clusters.ConeCoordinates.erase(clusters.ConeCoordinates.begin() + i);
+    }
+  }
+  
+  ROS_INFO("Publishing to ReconstructedCluster and ReconstructedPc");
   reconcluster.publish(clusters);
+  reconclusterpc.publish(reconstructedcluster);
 }
 
 int main(int argc, char **argv)
@@ -69,6 +104,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   reconground = nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ReconstructedGround", 1);
+  reconclusterpc = nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ReconstructedClusterPc", 1);
   reconcluster = nh.advertise<perception::CoordinateList> ("ReconstructedCluster", 1);
 
   ros::Subscriber subcluster = nh.subscribe ("Clusters", 1, cluster_cb);

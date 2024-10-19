@@ -468,15 +468,15 @@ public:
                 float minzfromground = abs((coeffsclus[0]*Iter_Cluster.minheight.x + coeffsclus[1]*Iter_Cluster.minheight.y + coeffsclus[2]*Iter_Cluster.minheight.z + coeffsclus[3])/denominatorclus);
 
                 if ( //checks
-                // 1
-                (distclusfromground >=0.1 && distclusfromground < 0.22)
+                1
+                // (distclusfromground >=0.1 && distclusfromground < 0.22)
                 // && (Iter_Cluster.Avg.z + LidarHeight < MaxHeight)
                 // && (Iter_Cluster.Avg.z + LidarHeight > MinHeight)
                 // && (maxzfromground >= 0.21 )
                 // && (minzfromground <= 0.1 )
-                && (Iter_Cluster.clustersize < expected_points)
-                && (Iter_Cluster.clustersize > 0.1 * expected_points)
-                && ((Iter_Cluster.Right.y - Iter_Cluster.Left.y)*(Iter_Cluster.Right.y - Iter_Cluster.Left.y) + (Iter_Cluster.Right.x - Iter_Cluster.Left.x)*(Iter_Cluster.Right.x - Iter_Cluster.Left.x) < MaxWidth*MaxWidth)
+                // && (Iter_Cluster.clustersize < expected_points)
+                // && (Iter_Cluster.clustersize > 0.1 * expected_points)
+                // && ((Iter_Cluster.Right.y - Iter_Cluster.Left.y)*(Iter_Cluster.Right.y - Iter_Cluster.Left.y) + (Iter_Cluster.Right.x - Iter_Cluster.Left.x)*(Iter_Cluster.Right.x - Iter_Cluster.Left.x) < MaxWidth*MaxWidth)
                 // && (Iter_Cluster.clustersize > MinPoints)
                 // && (Iter_Cluster.Avg.x*Iter_Cluster.Avg.x + Iter_Cluster.Avg.y*Iter_Cluster.Avg.y < 30)
                 // && (curr_colour == 0)

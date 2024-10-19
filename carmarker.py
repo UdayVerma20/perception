@@ -13,7 +13,7 @@ prev=[0,0]
 total=[]
 pres=[]
 diff=0
-
+global_distance=0
 
 
 def call(data):
@@ -30,6 +30,10 @@ def call(data):
     # diff=math.sqrt(((abs(car_coordinate[1]-prev[1]))*2) + ((abs(car_coordinate[0]-prev[0]))*2))
     
     total.append(car_coordinate)
+    global global_distance
+    if(len(total)>1):
+        global_distance += ((total[-1][0]-total[-2][0])**2 + (total[-1][1]-total[-2][1])**2)**0.5
+    print("Global Distance ", global_distance)
 
 
 
@@ -49,7 +53,7 @@ def main():
         marker = Marker()
 
         # Set the frame ID and timestamp
-        marker.header.frame_id = "rslidar"
+        marker.header.frame_id = "map"
         marker.header.stamp = rospy.Time.now()
 
         # Set the namespace and ID for this marker
@@ -85,7 +89,7 @@ def main():
 
         # Define the points for the line strip
         global total
-        print("total=",total)
+        # print("total=",total)
         
         for i in total:
             p=Point()

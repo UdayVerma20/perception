@@ -522,6 +522,7 @@ public:
                 // }
             }
             // std::cout<<"3";
+            cluster_pc->push_back(pcl::PointXYZI(0.f));
             Clusters_pc.publish(*cluster_pc);
             // All_Clusters_pc.publish(*all_cluster_pc);
             // std::cout<<"4";

@@ -173,9 +173,7 @@ def callbackabx(data):
 if __name__ == "__main__":
 	print("SLAM")
 	rospy.init_node('slam')
-	# print("bruh")
 	rospy.Subscriber("/Clusters", CoordinateList, callbackabx)
-	# print("nigga")
 	rospy.Subscriber("/distance_hall",Float32, call)
 	rospy.Subscriber("/imu/data", Imu, Imucall)
 	rospy.spin()

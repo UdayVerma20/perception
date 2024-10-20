@@ -2,22 +2,20 @@
 <launch>
     <include file= "$(find rslidar_sdk)/launch/start.launch"/>
     <!--Fusion-->
-    <!--
     <include file= "$(find freenect_launch)/launch/freenect.launch"/>
     <include file= "$(find yolov9_ros)/ros/launch/detect.launch"/>
-    -->
+    
     <!--<node pkg="perception" type="VoxelDownsample" name="VoxelDownsample" output="screen">
     </node>
     <node pkg="perception" type="GroundRemoval" name="GroundRemoval" output="screen">
     </node>
     <node pkg="perception" type="DonSegmenation" name="DonSegmenation" output="screen">
     </node>-->
-    <node pkg="ground_removal" type="amzphy" name="amzphy" output="screen">
+    <node pkg="perception" type="LidarHeightRemoval" name="LidarHeightRemoval" output="screen">
     </node>
-    <node pkg="clustering" type="custom" name="custom" output="screen">
+    <node pkg="perception" type="CustomClustering" name="CustomClustering" output="screen">
     </node>
-    <!--
+    
     <node pkg="perception" type="SensorFusion" name="SensorFusion" output="screen">
     </node>
-    -->
 </launch>

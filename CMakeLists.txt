@@ -152,13 +152,13 @@ add_definitions(${PCL_DEFINITIONS})
 ## The recommended prefix ensures that target names across packages don't collide
 
 #Extra
-add_executable (reconstruction reconstruction.cpp)
+add_executable (reconstruction Extra/reconstruction.cpp)
 target_link_libraries (reconstruction ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable (SensorFusion SensorFusion.cpp)
+add_executable (SensorFusion Extra/SensorFusion.cpp)
 target_link_libraries (SensorFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable (VoxelDownsample VoxelDownsample.cpp)
+add_executable (VoxelDownsample Extra/VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-# add_executable(Img Img.cpp)
+# add_executable(Img Extra/Img.cpp)
 # target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #Clustering
@@ -182,13 +182,13 @@ add_executable(Amz GroundRemoval/Amz.cpp)
 target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 #Mixed
-add_executable (Mixed Mixed.cpp)
+add_executable (Mixed Merged/Mixed.cpp)
 target_link_libraries (Mixed ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable (MixedCustom MixedCustom.cpp)
+add_executable (MixedCustom Merged/MixedCustom.cpp)
 target_link_libraries (MixedCustom ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable(AmzCluster AmzCluster.cpp)
+add_executable(AmzCluster Merged/AmzCluster.cpp)
 target_link_libraries(AmzCluster ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_executable(Amzconcentric Amzconcentric.cpp)
+add_executable(Amzconcentric Merged/Amzconcentric.cpp)
 target_link_libraries(Amzconcentric ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 ## Rename C++ executable without prefix

@@ -9,6 +9,7 @@ from std_msgs.msg import Float32
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped
+from perception.msg import imu
 # from datetime import datetime
 # from rosgraph_msgs.msg import Clock
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -21,6 +22,7 @@ left_cone_coordinates=[]
 right_cone_coordinates=[]
 pub= rospy.Publisher('/slam_to_distfinder',uday,queue_size=10)
 car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=10)
+imu_pub=rospy.Publisher('/Imu_yaw',imu,queue_size=1)
 prev_yaw=0 
 prev_m=0
 prev_s=0
@@ -61,6 +63,12 @@ def call(data):
 	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta
 	d=0.205
 	theta =math.radians(yaw-orig_theta)
+	
+	message=imu()
+	message.yaw=theta
+	
+	imu_pub.publish(message)
+
 	# print("theta",theta)
 	# yaw_t1=yaw
 	car_coordinate[0]+=d*np.cos(theta)
@@ -172,7 +180,7 @@ def callbackabx(data):
 
 if __name__ == "__main__":
 	print("SLAM")
-	rospy.init_node('slam')
+	rospy.init_node('Slam')
 	rospy.Subscriber("/Clusters", CoordinateList, callbackabx)
 	rospy.Subscriber("/distance_hall",Float32, call)
 	rospy.Subscriber("/imu/data", Imu, Imucall)

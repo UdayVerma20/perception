@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- IMU -->
+    <include file= "$(find sparton_ahrs8_driver)/launch/ahrs-8.launch"/>
+    <!-- HALL EFFECT ARDUINO -->
+    <node pkg="$(find rosserial_arduino)" type="serial_node" name="serial_node" args="-d /dev/ttyACM0" output="screen">
+    <!-- </node> -->
+
+    <!-- RVIZ -->
+    <!-- <node pkg="rviz" name="slam_rviz" type="rviz" args="-d $(find perception)/rviz/slam.rviz" /> -->
+</launch>

@@ -60,6 +60,10 @@ add_message_files(
    CoordinateList.msg
    Coordinates.msg
    uday.msg
+   imu.msg
+   pid_input.msg
+   path_coordinates.msg
+   
 )
 
 ## Generate services in the 'srv' folder

@@ -17,6 +17,8 @@
     <node pkg="clustering" type="custom" name="custom" output="screen">
     </node>
     <!--
+    <node pkg="reconstruction" type="reconstruct" name="reconstruct" output="screen">
+    </node>
     <node pkg="perception" type="SensorFusion" name="SensorFusion" output="screen">
     </node>
     -->

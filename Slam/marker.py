@@ -19,7 +19,7 @@ def call(data):
 count = 0
 
 def main():
-    rospy.init_node("basic_shapes")
+    rospy.init_node("ConeMarker")
     marker_pub = rospy.Publisher("/marker_visualization_marker", MarkerArray, queue_size=1)
     rate = rospy.Rate(1)
     rospy.Subscriber("/slam_to_distfinder", uday, call)

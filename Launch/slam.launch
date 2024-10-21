@@ -6,13 +6,18 @@
     <!-- <node pkg="$(find rosserial_arduino)" type="serial_node" name="serial_node" args="-d /dev/ttyACM0" output="screen"> -->
     <!-- </node> -->
 
-    <!-- <node pkg="perception" type="Slam/marker" name="marker" output="screen">
-    </node> -->
-    <!-- <node pkg="perception" type="slam" name="slam" output="screen">
+    <!-- Diff Terminal launch-prefix="xterm -e" -->
+    <!-- <node pkg="perception" type="slam.py" name="Slam" output="screen">
+    </node>-->
+    <node pkg="perception" type="marker.py" name="ConeMarker" output="screen">
     </node>
-    <node pkg="perception" type="carmarker" name="carmarker" output="screen">
-    </node> -->
+    <node pkg="perception" type="carmarker.py" name="CarMarker" output="screen">
+    </node> 
+    <!-- <node pkg="perception" type="path_planning.py" name="Path_Planning" output="screen">
+    </node>-->
+    <node pkg="perception" type="path.py" name="PathMarker" output="screen">
+    </node> 
 
     <!-- RVIZ -->
-    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find perception)/rviz/slam.rviz" />
+    <node pkg="rviz" name="slam_rviz" type="rviz" args="-d $(find perception)/rviz/slam.rviz" />
 </launch>

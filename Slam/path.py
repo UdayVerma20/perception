@@ -7,8 +7,10 @@ from geometry_msgs.msg import Point
 from clustering.msg import Coordinates
 from time import sleep
 import math
+from perception.msg import path_coordinates
 # from race.msg import final_coordinates
-car_coordinate=[0,0]
+f=[0,0]
+s=[0,0]
 prev=[0,0]
 total=[]
 pres=[]
@@ -17,23 +19,25 @@ global_distance=0
 
 
 def call(data):
-    global car_coordinate 
-    global diff
-    global prev
-    global pres
-    car_coordinate=[0,0]
-    car_coordinate[0]=data.x
-    car_coordinate[1]=data.y
+    global f,s
+    f[0]=data.first[0]
+    f[1]=data.first[1]
+    s[0]=data.second[0]
+    s[1]=data.second[1]
+
+    
+    
 
     #print("present",car_coordinate)
     #print("prev prev",prev)
     # diff=math.sqrt(((abs(car_coordinate[1]-prev[1]))*2) + ((abs(car_coordinate[0]-prev[0]))*2))
     
-    total.append(car_coordinate)
-    global global_distance
-    if(len(total)>1):
-        global_distance += ((total[-1][0]-total[-2][0])**2 + (total[-1][1]-total[-2][1])**2)**0.5
-    print("Global Distance ", global_distance)
+    total.append(f)
+    total.append(s)
+    # global global_distance
+    # if(len(total)>1):
+    #     global_distance += ((total[-1][0]-total[-2][0])**2 + (total[-1][1]-total[-2][1])**2)**0.5
+    # print("Global Distance ", global_distance)
 
 
 
@@ -42,10 +46,10 @@ def call(data):
     
 
 def main():
-    rospy.init_node("CarMarker")
-    marker_pub = rospy.Publisher("/track_viz", Marker, queue_size=100)
+    rospy.init_node("PathMarker")
+    marker_pub = rospy.Publisher("/path_viz", Marker, queue_size=100)
     rate = rospy.Rate(1)
-    rospy.Subscriber("/CarCoordinate",Coordinates, call)
+    rospy.Subscriber('/path',path_coordinates, call)
     # Set our initial shape type to be a cube
     shape = Marker.LINE_STRIP
 
@@ -83,8 +87,8 @@ def main():
 
         # Set the color
         marker.color.r = 0.0
-        marker.color.g = 0.0
-        marker.color.b = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
         marker.color.a = 1.0
 
         # Define the points for the line strip
@@ -120,5 +124,5 @@ def main():
         rate.sleep()
 
 if __name__ == "__main__":
-    total.append(car_coordinate)
+    
     main()

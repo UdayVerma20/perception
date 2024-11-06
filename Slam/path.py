@@ -19,7 +19,7 @@ global_distance=0
 
 
 def call(data):
-    global f,s
+    global f,s, total
     f[0]=data.first[0]
     f[1]=data.first[1]
     s[0]=data.second[0]

@@ -16,6 +16,7 @@
 //publish 
 #include <pcl_ros/point_cloud.h>
 
+#define deg 0.05f
 //typedef pcl::PointCloud<pcl::PointXYZ> pcl::PointCloud<pcl::PointXYZ>
 
 class VoxelDownsample
@@ -25,7 +26,7 @@ public:
     {
         //VoxelDownsampleHandle{};
         PointCloud = VoxelDownsampleHandle.advertise<pcl::PointCloud<pcl::PointXYZ>>("VoxelCloud", 10);
-        Subscribe = VoxelDownsampleHandle.subscribe("velodyne_points", 10, &VoxelDownsample::callback, this);
+        Subscribe = VoxelDownsampleHandle.subscribe("rslidar_points", 10, &VoxelDownsample::callback, this);
         //timer(VoxelDownsampleHandle.createTimer(ros::Duration(0.1), &VoxelDownsample::main_loop, this));
     }
 
@@ -45,9 +46,9 @@ public:
         
         pcl::VoxelGrid<pcl::PointXYZ> sor;
         sor.setInputCloud (pt_cloud);
-        sor.setLeafSize (0.04f, 0.04f, 0.04f);
+        sor.setLeafSize (deg, deg, deg);
         sor.filter (*cloud_voxel);
-        std::cout<<"Downsampling Cloud"<<std::endl<<std::endl<<std::endl<<std::endl<<std::endl;
+        std::cout<<"Downsampling Cloud"<<std::endl;//<<std::endl<<std::endl<<std::endl<<std::endl;
         PointCloud.publish(*cloud_voxel);
         
     }

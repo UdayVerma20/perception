@@ -236,7 +236,7 @@ main (int argc, char** argv)
   // pub_ = nh.advertise<perception::CoordinateList>("Clusters", 1);
   // pub_cloud= nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("ClustersCloud", 1);
   marker_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
-  ros::Subscriber sub = nh.subscribe ("rslidar_points", 1, cloud_cb);
+  ros::Subscriber sub = nh.subscribe ("VoxelCloud", 1, cloud_cb);
   // rate.sleep
   ros::spin ();
 }

@@ -23,8 +23,9 @@
 #include "pcl-1.10/pcl/filters/impl/filter.hpp"
 #include <pcl/filters/passthrough.h>
 
-#define LidarHeight 0.4 //0.2
-#define Theta 0//-0.024618149859381887
+#define LidarHeight 0.35
+#define Theta 0.045//0.024618149859381887
+
 float cos_theta = cos(Theta);
 float sin_theta = sin(Theta);
 #define Threshold 0.01
@@ -41,7 +42,7 @@ public:
     {
         //LidarHeightRemovalHandle{};
         // Ground = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("Ground", 10);
-        PointCloud = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("ConeCloud", 10);
+        PointCloud = LidarHeightRemovalHandle.advertise<pcl::PointCloud<PointType>>("nogroundcloud", 10);
         Subscribe = LidarHeightRemovalHandle.subscribe(LidarTopic, 10, &LidarHeightRemoval::callback, this);
         //timer(LidarHeightRemovalHandle.createTimer(ros::Duration(0.1), &LidarHeightRemoval::main_loop, this));
     }

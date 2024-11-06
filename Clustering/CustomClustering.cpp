@@ -19,7 +19,7 @@
 #define LidarSource "rslidar"
 
 //ConeCheck
-#define LidarHeight 0.3
+#define LidarHeight 0.25
 #define MaxHeight 0.4
 #define MinHeight 0
 // #define MinHeight 0.1 //0.2
@@ -91,7 +91,7 @@ public:
         Clusters = ClusteringHandle.advertise<perception::CoordinateList>("Clusters", 1000);
         Clusters_pc = ClusteringHandle.advertise<pcl::PointCloud<PointType>>("Clusters_PointCloud", 1000);
         // All_Clusters_pc = ClusteringHandle.advertise<pcl::PointCloud<PointType>>("All_Clusters_PointCloud", 100);
-        Subscribe = ClusteringHandle.subscribe("ConeCloud", 10, &Clustering::callback, this);
+        Subscribe = ClusteringHandle.subscribe("nogroundcloud", 10, &Clustering::callback, this);
         //timer(ClusteringHandle.createTimer(ros::Duration(0.1), &GroundRemoval::main_loop, this));
     }
 
@@ -132,6 +132,7 @@ public:
             for (PointType point : pt_cloud->points) { 
                 // std::cout<<"BBBB"<<pointno++<<std::endl;
                 if (isfinite(point.x) && isfinite(point.y) && isfinite(point.z)){
+                    // if (abs(point.y) > 2.5 || point.x > 10 ) continue;
                     int found_cluster = 0;
                     for (int index = 0; index < Clusters_Vector.size(); index++){
                         CustomCluster Iter_Cluster = Clusters_Vector[index];

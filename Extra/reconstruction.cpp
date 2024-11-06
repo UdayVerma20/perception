@@ -8,8 +8,8 @@
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/filters/filter.h>
-#include <perception/CoordinateList.h>
-#include <perception/Coordinates.h>
+#include <clustering/CoordinateList.h>
+#include <clustering/Coordinates.h>
 #include<bits/stdc++.h>
 #include <pcl_ros/point_cloud.h>
 
@@ -20,12 +20,12 @@ using namespace std;
 #define lengthcuboid 0.1 //front and back of cone
 #define widthcuboid 0.2 //side to side of cone
 
-perception::CoordinateList clusters;
+clustering::CoordinateList clusters;
 ros::Publisher reconground;
 ros::Publisher reconcluster;
 ros::Publisher reconclusterpc;
 
-void cluster_cb (perception::CoordinateList inputclusters)
+void cluster_cb (clustering::CoordinateList inputclusters)
 {
   clusters = inputclusters;
 }
@@ -34,14 +34,16 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
   pcl::PointCloud<pcl::PointXYZI>::Ptr reconstructedcloud(new pcl::PointCloud<pcl::PointXYZI>);
   reconstructedcloud->header.frame_id = lidarframe;
+  reconstructedcloud->push_back(pcl::PointXYZI(0.f));
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloudtomanipulate(new pcl::PointCloud<pcl::PointXYZI>);
   pcl::fromROSMsg (*input, *cloudtomanipulate);
   for(int index=0; index<cloudtomanipulate->points.size(); index++){
     for(int cluster_index = 0; cluster_index < clusters.size; cluster_index++){
-        if((cloudtomanipulate->points)[index].x >= clusters.ConeCoordinates[cluster_index].x - lengthcuboid && (cloudtomanipulate->points)[index].x <= clusters.ConeCoordinates[cluster_index].x + lengthcuboid
-        && (cloudtomanipulate->points)[index].y >= clusters.ConeCoordinates[cluster_index].y - widthcuboid && (cloudtomanipulate->points)[index].y <= clusters.ConeCoordinates[cluster_index].y + widthcuboid
-        && (cloudtomanipulate->points)[index].z >= clusters.ConeCoordinates[cluster_index].z - heightcuboid && (cloudtomanipulate->points)[index].z <= clusters.ConeCoordinates[cluster_index].z + heightcuboid        
-        ) {
+        if(((cloudtomanipulate->points)[index].x >= clusters.ConeCoordinates[cluster_index].x - lengthcuboid && (cloudtomanipulate->points)[index].x <= clusters.ConeCoordinates[cluster_index].x + lengthcuboid)
+        && ((cloudtomanipulate->points)[index].y >= clusters.ConeCoordinates[cluster_index].y - widthcuboid && (cloudtomanipulate->points)[index].y <= clusters.ConeCoordinates[cluster_index].y + widthcuboid)
+        && ((cloudtomanipulate->points)[index].z >= clusters.ConeCoordinates[cluster_index].z - heightcuboid && (cloudtomanipulate->points)[index].z <= clusters.ConeCoordinates[cluster_index].z + heightcuboid)        
+        ){
+            // Not updating avg
             reconstructedcloud->push_back((cloudtomanipulate->points)[index]);
             clusters.ConeCoordinates[cluster_index].size++;
             if (clusters.ConeCoordinates[cluster_index].left[1] > (cloudtomanipulate->points)[index].y){
@@ -64,37 +66,66 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZI>::Ptr reconstructedcluster(new pcl::PointCloud<pcl::PointXYZI>);
   reconstructedcluster->header.frame_id = lidarframe;
   reconstructedcluster->push_back(pcl::PointXYZI(0.f));
+  clustering::CoordinateList recon_clusters;
+  recon_clusters.size = 0;
   for (int i = 0; i < clusters.size; i++){
-    perception::Coordinates Iter_Cluster = clusters.ConeCoordinates[i];
+    clustering::Coordinates Iter_Cluster = clusters.ConeCoordinates[i];
     int dist_sq = pow(Iter_Cluster.x, 2.0) + pow(Iter_Cluster.y, 2.0) + pow(Iter_Cluster.z, 2.0);
     int expected_points = (5000)/(dist_sq + 1);
+    // cout <<"Avg "<<Iter_Cluster.x <<" "<<Iter_Cluster.y <<" "<<Iter_Cluster.z <<" "<<endl;
+    // cout<<"top ";
+    // for (auto i : Iter_Cluster.top){
+    //   cout <<i<<" ";
+    // }
+    // cout<<endl;
+    // cout<<"bottom ";
+    // for (auto i : Iter_Cluster.bottom){
+    //   cout <<i<<" ";
+    // }
+    // cout<<endl;
+    // cout<<"left ";
+    // for (auto i : Iter_Cluster.left){
+    //   cout <<i<<" ";
+    // }
+    // cout<<endl;
+    // cout<<"right ";
+    // for (auto i : Iter_Cluster.right){
+    //   cout <<i<<" ";
+    // }
+    // cout<<endl;
     if ( //checks
-    0
-    // // (distclusfromground >=0.1 && distclusfromground < 0.22)
+    1
+    // && ( Iter_Cluster.size>=expected_points*0.2 )
+    // && (Iter_Cluster.size > MinPoints)
+    // && ( Iter_Cluster.size<=expected_points )
+    // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] > 0.1 )
+    // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] < 0.5 )
+    // && ( abs(Iter_Cluster.left[1]-Iter_Cluster.right[1]) > 0.02 )
+    // && ( abs(Iter_Cluster.left[1]-Iter_Cluster.right[1]) < 0.2 )
     // // && (Iter_Cluster.z + LidarHeight < MaxHeight)
     // // && (Iter_Cluster.z + LidarHeight > MinHeight)
     // // && (maxzfromground >= 0.21 )
     // // && (minzfromground <= 0.1 )
-    // && (Iter_Cluster.size < expected_points)
-    // && (Iter_Cluster.size > 0.1 * expected_points)
     // && ((Iter_Cluster.right[1] - Iter_Cluster.left[1])*(Iter_Cluster.right[1] - Iter_Cluster.left[1]) + (Iter_Cluster.right[0] - Iter_Cluster.left[0])*(Iter_Cluster.right[0] - Iter_Cluster.left[0]) < MaxWidth*MaxWidth)
-    // && (Iter_Cluster.size > MinPoints)
     // && (Iter_Cluster.x*Iter_Cluster.x + Iter_Cluster.y*Iter_Cluster.y < 30)
-    // && (curr_colour == 0)
     ){
       pcl::PointXYZI point;
       point.x = Iter_Cluster.x;
       point.y = Iter_Cluster.y;
       point.z = Iter_Cluster.z;
       reconstructedcluster->push_back(point);
+      recon_clusters.ConeCoordinates.push_back(Iter_Cluster);
+      recon_clusters.size++;
+      // cout<<"no"<<endl;
     }
-    else{
-      clusters.ConeCoordinates.erase(clusters.ConeCoordinates.begin() + i);
-    }
+    // else{
+    //   cout<<"hi"<<endl;
+    //   clusters.ConeCoordinates.erase(clusters.ConeCoordinates.begin() + i);
+    // }
   }
   
   ROS_INFO("Publishing to ReconstructedCluster and ReconstructedPc");
-  reconcluster.publish(clusters);
+  reconcluster.publish(recon_clusters);
   reconclusterpc.publish(reconstructedcluster);
 }
 
@@ -105,7 +136,7 @@ int main(int argc, char **argv)
 
   reconground = nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ReconstructedGround", 1);
   reconclusterpc = nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("ReconstructedClusterPc", 1);
-  reconcluster = nh.advertise<perception::CoordinateList> ("ReconstructedCluster", 1);
+  reconcluster = nh.advertise<clustering::CoordinateList> ("ReconstructedCluster", 1);
 
   ros::Subscriber subcluster = nh.subscribe ("Clusters", 1, cluster_cb);
   ros::Subscriber subcloud = nh.subscribe ("rslidar_points", 1, cloud_cb);

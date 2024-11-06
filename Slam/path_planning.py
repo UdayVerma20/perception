@@ -73,16 +73,22 @@ def callback(data):
 		B=midpoints[1][0]-midpoints[0][0]
 		C=(midpoints[0][0]*midpoints[1][1])-(midpoints[1][0]*midpoints[0][1])
 		err=(abs((A*car_coordinate[0])+(B*car_coordinate[1]+C))/math.sqrt((A**2)+(B**2)))
-
-		dist_car_left= math.sqrt(((leftcone[1][0]-car_coordinate[0])**2)+((leftcone[1][1]-car_coordinate[1])**2))
-		dist_car_right= math.sqrt(((rightcone[1][0]-car_coordinate[0])**2)+((rightcone[1][1]-car_coordinate[1])**2))
-
+		d=((car_coordinate[0]-midpoints[0][0])*(midpoints[1][1]-midpoints[0][1]))-((car_coordinate[1]-midpoints[0][1])*(midpoints[1][0]-midpoints[0][1]))
+		# dist_car_left= math.sqrt(((leftcone[-1][0]-car_coordinate[0])**2)+((leftcone[-1][1]-car_coordinate[1])**2))
+		# dist_car_right= math.sqrt(((rightcone[-1][0]-car_coordinate[0])**2)+((rightcone[-1][1]-car_coordinate[1])**2))
+		print("Yaw ", math.degrees(yaw), "Ideal ", math.degrees(ideal),math.degrees(yaw)-math.degrees(ideal))
+		# print(dist_car_left)
+		# print(dist_car_right)
 		Alpha= yaw-ideal
-		if(dist_car_left<=dist_car_right):
+		if(d<0):
+			print("left")
 			error=forward_projection*math.sin(Alpha)+err
 		else:
+			print("right")
 			error=forward_projection*math.sin(Alpha)-err
-
+		print("err",err)
+		print("projection",forward_projection*math.sin(Alpha))
+		print("Error ", error)
 		A1=leftcone[1][1]-rightcone[1][1]
 		B1=rightcone[1][0]-leftcone[1][0]
 		C1=(leftcone[1][0]*rightcone[1][1])-(rightcone[1][0]*leftcone[1][1])
@@ -95,6 +101,7 @@ def callback(data):
 		msg.pid_error=error
 		msg.pid_vel=vel
 		pub.publish(msg)
+		print("----------------------------")
 
 def call(data):
 	leftcone.append(data.leftcone)

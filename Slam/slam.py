@@ -46,7 +46,8 @@ def Imucall(data):
 	orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
 	(roll, pitch, yaw) = euler_from_quaternion (orientation_list)
 	yaw = math.degrees(yaw)
-	# print("Yaw ",yaw)
+	print("1",yaw)
+	
 	if yaw<0:
 		yaw +=360
 	# print("Yaw",yaw)
@@ -57,13 +58,17 @@ def Imucall(data):
 		# theta=yaw - orig_theta
 		# yaw_t1=yaw - orig_theta
 		a=False
+	print("Yaw ",yaw)
+	print("2",orig_theta)
+	t=(yaw-orig_theta)
+	print(t)
 	
 
 def call(data):
-	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta
+	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta,cones
 	d=0.205
 	theta =math.radians(yaw-orig_theta)
-	
+	# print(theta)
 	message=imu()
 	message.yaw=theta
 	
@@ -85,7 +90,7 @@ def call(data):
 		cones[i][0]+= car_coordinate[0]
 		cones[i][1]+= car_coordinate[1]
 	print("------------------------------")
-	print("cones=",cones)
+	# print("cones=",cones)
 	
 	# car_coordinate[1]+=d
 	# print("car_x",car_coordinate[0])
@@ -99,18 +104,29 @@ def call(data):
 	reference=[reference_x,reference_y]
 	# print("reference",reference)
 	cones_new=[]
+	flag=[1]*len(cones)
 	if(len(left_cone_coordinates)!=0 and len(right_cone_coordinates)!=0):
-		for j in range(0,len(left_cone_coordinates)):
-			for i in cones:
-				p=[i[0],i[1]]
+		for i in range(0,len(cones)):
+			for j in range(0,len(left_cone_coordinates)):
+				p=[cones[i][0],cones[i][1]]
 				print("distleft",left_cone_coordinates[j],p,distance(left_cone_coordinates[j],p))
 				print("distright",right_cone_coordinates[j],p,distance(right_cone_coordinates[j],p))
-				if(distance(left_cone_coordinates[j],p)>1 and distance(right_cone_coordinates[j],p)>1):
+				if(distance(left_cone_coordinates[j],p)<1 or distance(right_cone_coordinates[j],p)<1 ):
 					print("removed",p)
-					cones_new.append(i)
+					flag[i]=0
+					#cones_new.append(cones[i])
+
+		for i in range(0,len(cones)):
+			if(flag[i]==1):
+				cones_new.append(cones[i])
+		cones=cones_new
 					
 	# print("removed",cones)
-		cones=cones_new
+		# print("cones_new",cones_new)
+		# cones=cones_new
+		#print("cones_new",cones)
+	
+	# print(cones)
 	for i in range(0,len(cones)):
 		for j in range(i+1,len(cones)):
 			mid_x=(cones[i][0]+cones[j][0])/2
@@ -132,8 +148,8 @@ def call(data):
 				r[1]=cones[i][1]
 				min_left_coordinate=l
 				min_right_coordinate=r
-	print("min left coordinate=",min_left_coordinate)
-	print("min right coordinate=",min_right_coordinate)
+	# print("min left coordinate=",min_left_coordinate)
+	# print("min right coordinate=",min_right_coordinate)
 
 	if(len(left_cone_coordinates)==0 and distance(reference,car_coordinate)<1):
 		left_cone_coordinates.append(min_left_coordinate)
@@ -142,7 +158,7 @@ def call(data):
 		message.leftcone=min_left_coordinate
 		message.rightcone=min_right_coordinate
 		pub.publish(message)
-		print("published")
+		# print("published")
 		min_distance=10000
 		min_left_coordinate=[-1,-1]
 		min_right_coordinate=[-1,-1]
@@ -159,7 +175,7 @@ def call(data):
 			message.leftcone=min_left_coordinate
 			message.rightcone=min_right_coordinate
 			pub.publish(message)
-			print("published")
+			# print("published")
 			min_distance=10000
 			min_left_coordinate=[-1,-1]
 			min_right_coordinate=[-1,-1]

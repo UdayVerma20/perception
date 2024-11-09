@@ -27,7 +27,6 @@ def callback(data):
     
     prev_error=error
     motormsg = Float32()
-    # if(a<)
     motormsg.data = a
     pub.publish(motormsg)
 

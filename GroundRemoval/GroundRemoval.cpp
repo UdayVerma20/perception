@@ -58,7 +58,7 @@ public:
         // Mandatory
         seg.setModelType (pcl::SACMODEL_PLANE);
         seg.setMethodType (pcl::SAC_RANSAC);
-        seg.setDistanceThreshold (0.1);
+        seg.setDistanceThreshold (0.13);
         pcl::PointCloud<pcl::PointXYZ>::Ptr ground_plane (new pcl::PointCloud<pcl::PointXYZ> ), filtered_cloud (new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr ground_plane_nan (new pcl::PointCloud<pcl::PointXYZ> ), filtered_cloud_nan (new pcl::PointCloud<pcl::PointXYZ>);
         seg.setInputCloud (pt_cloud);

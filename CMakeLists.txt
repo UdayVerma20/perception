@@ -63,6 +63,8 @@ add_message_files(
    imu.msg
    pid_input.msg
    path_coordinates.msg
+   landmark_points.msg
+   
    
 )
 

@@ -55,7 +55,7 @@ car_coordinate=[0,0]
 
 
 pub= rospy.Publisher('/landmark',landmark_points,queue_size=100)
-
+car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=10)
 def ekf_slam():
 
     global xEst,PEst,z,cones,car_coordinate
@@ -93,6 +93,10 @@ def ekf_slam():
     msg.land_y=y
     pub.publish(msg)
 
+    current_coordinate = Coordinates()
+    current_coordinate.x =xEst[0][0]
+    current_coordinate.y =xEst[1][0]
+    car_coordinate_pub.publish(current_coordinate)
         
     # for measurement in cones:
     #     #H_f,Psi_f,difference_f,K=data_association(xEst,PEst,measurement,z)

@@ -15,13 +15,13 @@ diff = 0
 
 def call(data):
     print("call")
-    total=[[1,1],[2,2]]
+    # total=[[1,1],[2,2]]
     # total=[]
-    # for i in range(len(data.land_x)):
-    #     a=[0,0]
-    #     a[0]=data.land_x[0]
-    #     a[1]=data.land_y[1]
-    #     total.append(a)
+    for i in range(len(data.land_x)):
+        a=[0,0]
+        a[0]=data.land_x[i]
+        a[1]=data.land_y[i]
+        total.append(a)
     
 
 count = 0
@@ -83,9 +83,11 @@ def main():
             # p.y = i[1]
             # marker.points.append(p)
 
-            markerArraylala.markers.append(marker)    
+            markerArraylala.markers.append(marker)   
+        # print(markerArraylala) 
+
         marker_pub.publish(markerArraylala)
-        # print("done")
+        print("done")
 
         # Cycle between different shapes
         rate.sleep()

@@ -5,5 +5,7 @@ float32 z
 float32 colour
 float32[] left
 float32[] right
+float32[] front
+float32[] back
 float32[] top
 float32[] bottom

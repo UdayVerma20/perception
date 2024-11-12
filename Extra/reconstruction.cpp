@@ -61,19 +61,25 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
         ){
             // Not updating avg
             reconstructedcloud->push_back((cloudtomanipulate->points)[index]);
-            clusters.ConeCoordinates[cluster_index].size++;
-            if (clusters.ConeCoordinates[cluster_index].left[1] > (cloudtomanipulate->points)[index].y){
-                clusters.ConeCoordinates[cluster_index].left = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
-            }
-            if (clusters.ConeCoordinates[cluster_index].right[1] < (cloudtomanipulate->points)[index].y){
-                clusters.ConeCoordinates[cluster_index].right = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
-            }
-            if (clusters.ConeCoordinates[cluster_index].top[2] < (cloudtomanipulate->points)[index].z){
-                clusters.ConeCoordinates[cluster_index].top = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
-            }
-            if (clusters.ConeCoordinates[cluster_index].bottom[2] > (cloudtomanipulate->points)[index].y){
-                clusters.ConeCoordinates[cluster_index].left = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
-            }
+            clusters.ConeCoordinates[cluster_index].reconsize++;
+            // if (clusters.ConeCoordinates[cluster_index].front[0] > (cloudtomanipulate->points)[index].x){
+            //     clusters.ConeCoordinates[cluster_index].front = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
+            // if (clusters.ConeCoordinates[cluster_index].rear[0] < (cloudtomanipulate->points)[index].x){
+            //     clusters.ConeCoordinates[cluster_index].rear = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
+            // if (clusters.ConeCoordinates[cluster_index].left[1] > (cloudtomanipulate->points)[index].y){
+            //     clusters.ConeCoordinates[cluster_index].left = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
+            // if (clusters.ConeCoordinates[cluster_index].right[1] < (cloudtomanipulate->points)[index].y){
+            //     clusters.ConeCoordinates[cluster_index].right = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
+            // if (clusters.ConeCoordinates[cluster_index].top[2] < (cloudtomanipulate->points)[index].z){
+            //     clusters.ConeCoordinates[cluster_index].top = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
+            // if (clusters.ConeCoordinates[cluster_index].bottom[2] > (cloudtomanipulate->points)[index].z){
+            //     clusters.ConeCoordinates[cluster_index].bottom = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
+            // }
         }
     }
   }
@@ -87,45 +93,31 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   float denominator = 1;
   for (int i = 0; i < clusters.size; i++){
     clustering::Coordinates Iter_Cluster = clusters.ConeCoordinates[i];
-    int dist_sq = pow(Iter_Cluster.x, 2.0) + pow(Iter_Cluster.y, 2.0) + pow(Iter_Cluster.z, 2.0);
-    int expected_points = (5000)/(dist_sq + 1); //remove dist =0
+    // int dist_sq = pow(Iter_Cluster.x, 2.0) + pow(Iter_Cluster.y, 2.0) + pow(Iter_Cluster.z, 2.0);
+    // int expected_points = (2000)/(dist_sq + 1); //remove dist =0
+    // if (!(Iter_Cluster.Avg.x == 0 && Iter_Cluster.Avg.y ==0)){
+    //     float ratio = Iter_Cluster.Avg.y/abs(Iter_Cluster.Avg.x);
+    //     if ((ratio > tan(10) && ratio < tan(15)) || (ratio > tan(30) && ratio < tan(40))){
+    //         expected_points /= 2;
+    //     }
+    // }
     
     //checking cone distance from lu planes
-    int ringclus = pow(pow(Iter_Cluster.x, 2)+pow(Iter_Cluster.y, 2), 0.5)/ringlength;
-    float angleclus = atan2(Iter_Cluster.x, -Iter_Cluster.y) - M_PI/6;
-    int key = int((angleclus)/(sectorangle)) + int((2*M_PI*ringclus)/(3*sectorangle));
+    // int ringclus = pow(pow(Iter_Cluster.x, 2)+pow(Iter_Cluster.y, 2), 0.5)/ringlength;
+    // float angleclus = atan2(Iter_Cluster.x, -Iter_Cluster.y) - M_PI/6;
+    // int key = int((angleclus)/(sectorangle)) + int((2*M_PI*ringclus)/(3*sectorangle));
     
-    denominator = pow(pow(ground[key][0], 2) + pow(ground[key][1], 2) + pow(ground[key][2], 2), 0.5);
-    float distance = abs(Iter_Cluster.x*ground[key][0] + Iter_Cluster.y*ground[key][1] + Iter_Cluster.z*ground[key][2] + ground[key][3])/denominator;
-    float minzfromground = abs(Iter_Cluster.bottom[0]*ground[key][0] + Iter_Cluster.bottom[1]*ground[key][1] + Iter_Cluster.bottom[2]*ground[key][2] + ground[key][3])/denominator;
-    float maxzfromground = abs(Iter_Cluster.top[0]*ground[key][0] + Iter_Cluster.top[1]*ground[key][1] + Iter_Cluster.top[2]*ground[key][2] + ground[key][3])/denominator;
+    // denominator = pow(pow(ground[key][0], 2) + pow(ground[key][1], 2) + pow(ground[key][2], 2), 0.5);
+    // float distance = abs(Iter_Cluster.x*ground[key][0] + Iter_Cluster.y*ground[key][1] + Iter_Cluster.z*ground[key][2] + ground[key][3])/denominator;
+    // float minzfromground = abs(Iter_Cluster.bottom[0]*ground[key][0] + Iter_Cluster.bottom[1]*ground[key][1] + Iter_Cluster.bottom[2]*ground[key][2] + ground[key][3])/denominator;
+    // float maxzfromground = abs(Iter_Cluster.top[0]*ground[key][0] + Iter_Cluster.top[1]*ground[key][1] + Iter_Cluster.top[2]*ground[key][2] + ground[key][3])/denominator;
     
-    // cout << "<<Iter_Cluster.x <<" "<<Iter_Cluster.y <<" "<<Iter_Cluster.z <<" "<<endl;
-    // cout<<"top ";
-    // for (auto i : Iter_Cluster.top){
-    //   cout <<i<<" ";
-    // }
-    // cout<<endl;
-    // cout<<"bottom ";
-    // for (auto i : Iter_Cluster.bottom){
-    //   cout <<i<<" ";
-    // }
-    // cout<<endl;
-    // cout<<"left ";
-    // for (auto i : Iter_Cluster.left){
-    //   cout <<i<<" ";
-    // }
-    // cout<<endl;
-    // cout<<"right ";
-    // for (auto i : Iter_Cluster.right){
-    //   cout <<i<<" ";
-    // }
-    // cout<<endl;
     if ( //checks
     1
-    // && ( Iter_Cluster.size>=expected_points*0.2 )
-    // && (Iter_Cluster.size > MinPoints)
-    // && ( Iter_Cluster.size<=expected_points )
+    && ((abs(Iter_Cluster.size - Iter_Cluster.reconsize)/Iter_Cluster.size) < 1)
+    // && ( Iter_Cluster.reconsize>=expected_points*0.2 )
+    // && (Iter_Cluster.reconsize > MinPoints)
+    // && ( Iter_Cluster.reconsize<=expected_points )
     // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] > 0.1 )
     // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] < 0.5 )
     // && ( abs(Iter_Cluster.left[1]-Iter_Cluster.right[1]) > 0.02 )
@@ -136,6 +128,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     // // && (minzfromground <= 0.1 )
     // && ((Iter_Cluster.right[1] - Iter_Cluster.left[1])*(Iter_Cluster.right[1] - Iter_Cluster.left[1]) + (Iter_Cluster.right[0] - Iter_Cluster.left[0])*(Iter_Cluster.right[0] - Iter_Cluster.left[0]) < MaxWidth*MaxWidth)
     // && (Iter_Cluster.x*Iter_Cluster.x + Iter_Cluster.y*Iter_Cluster.y < 30)
+    
     ){
       pcl::PointXYZI point;
       point.x = Iter_Cluster.x;

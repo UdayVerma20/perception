@@ -19,7 +19,7 @@ from perception.msg import path_coordinates
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from sensor_msgs.msg import Imu
-global x_tf, current_states, x_pos,y_pos,cur_yaw,delta,vel,theta,beta,wh_ba,prev_time,prev_yaw,time,yaw, f, e, U, total, heading
+global x_tf, current_states, x_pos,y_pos,cur_yaw,delta,vel,theta,beta,wh_ba,prev_time,prev_yaw,time,yaw, f, e, U, total, heading, imuflag, lauda, done
 x_tf = []
 current_states = []
 # i = 2
@@ -39,9 +39,13 @@ time = 0.001
 yaw=0
 f=[0,0]
 e=[0,0]
-total = []
+total = [[0,0],[0,0]]
 U = np.array([[0],[0]])
 heading=0
+
+imuflag = 0
+lauda = 0.0
+done = 0
 pub = rospy.Publisher('/MotorControl', Float32, queue_size=10)
 marker_pub = rospy.Publisher("/control_viz", Marker, queue_size=100)
 shape = Marker.LINE_STRIP
@@ -62,10 +66,18 @@ def motorcall(data):
 
 
 def Imucall(data):
-	global cur_yaw
-	cur_yaw = euler_from_quaternion ([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])[2]
+    global cur_yaw, lauda, imuflag
+    cur_yaw = euler_from_quaternion ([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])[2]
+    if (imuflag==0):
+        lauda = cur_yaw
+        imuflag = 1
+    cur_yaw = cur_yaw-lauda
+    
+
 
 def cords(data):
+    global done
+    done = 1
 
     # cords_flag = True
     global f,e
@@ -76,7 +88,10 @@ def cords(data):
     return f,e
     
 def callback(data):
-    global current_states, x_pos, y_pos, cur_yaw, delta
+    
+    global current_states, x_pos, y_pos, cur_yaw, delta, done
+    if(done==0):
+        return
     x_pos=data.x
     y_pos=data.y
     current_states = np.array([[x_pos], [y_pos], [cur_yaw], [delta]])
@@ -86,7 +101,9 @@ def callback(data):
 
 
 def error():
-    global current_states, x_pos, y_pos, cur_yaw, delta, vel, theta, beta,wh_ba, prev_yaw, prev_time, time, x_tf,i,heading ,total, U,e,f
+    global current_states, x_pos, y_pos, cur_yaw, delta, vel, theta, beta,wh_ba, prev_yaw, prev_time, time, x_tf,i,heading ,total, U,e,f, lauda
+    if(lauda==0):
+        return
     if(prev_time==0.0):
         prev_time = rospy.get_time()
         return
@@ -109,8 +126,8 @@ def error():
     total[1] = [current_states[0][0], current_states[1][0]]
     x_tf = np.array([[e[0]],[e[1]],[heading],[0]])  
     # print("x")
-    # print(x_tf)
-    # print(current_states)
+    print("X ",x_tf)
+    print("Curr ",current_states)
     error_states = x_tf-current_states
 
     
@@ -125,8 +142,8 @@ def error():
     P = scipy.linalg.solve_continuous_are(A,B,Q,R)
     S = np.dot(np.linalg.inv(R),np.transpose(B))
     K = np.dot(S,P)
-    print("k")
-    print(K)
+    # print("k")
+    # print(K)
     # print(error_states)
     # print(U)
     U = -1*np.dot(K,error_states)
@@ -228,3 +245,23 @@ if __name__ == '__main__':
         # Cycle between different shapes
 
         rate.sleep()
+'''X  [[3.98455763]
+ [0.27251351]
+ [0.06839241]
+ [0.        ]]
+Curr  [[ 1.8448559 ]
+ [ 0.01399887]
+ [-0.35272991]
+ [-0.13710713]]
+[ERROR] [1731584234.975375]: bad callback: <function callback at 0x7fd97aa68ee0>
+Traceback (most recent call last):
+  File "/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py", line 750, in _invoke_callback
+    cb(msg)
+  File "/home/uday/catkin_ws/src/perception/Extra/control2.py", line 85, in callback
+    error()
+  File "/home/uday/catkin_ws/src/perception/Extra/control2.py", line 125, in error
+    P = scipy.linalg.solve_continuous_are(A,B,Q,R)
+  File "/home/uday/.local/lib/python3.8/site-packages/scipy/linalg/_solvers.py", line 507, in solve_continuous_are
+    raise LinAlgError('Failed to find a finite solution.')
+numpy.linalg.LinAlgError: Failed to find a finite solution.
+'''

@@ -31,6 +31,8 @@ struct Coordinates_
     , colour(0.0)
     , left()
     , right()
+    , front()
+    , back()
     , top()
     , bottom()  {
     }
@@ -42,6 +44,8 @@ struct Coordinates_
     , colour(0.0)
     , left(_alloc)
     , right(_alloc)
+    , front(_alloc)
+    , back(_alloc)
     , top(_alloc)
     , bottom(_alloc)  {
   (void)_alloc;
@@ -69,6 +73,12 @@ struct Coordinates_
 
    typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _right_type;
   _right_type right;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _front_type;
+  _front_type front;
+
+   typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _back_type;
+  _back_type back;
 
    typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _top_type;
   _top_type top;
@@ -112,6 +122,8 @@ bool operator==(const ::perception::Coordinates_<ContainerAllocator1> & lhs, con
     lhs.colour == rhs.colour &&
     lhs.left == rhs.left &&
     lhs.right == rhs.right &&
+    lhs.front == rhs.front &&
+    lhs.back == rhs.back &&
     lhs.top == rhs.top &&
     lhs.bottom == rhs.bottom;
 }
@@ -170,12 +182,12 @@ struct MD5Sum< ::perception::Coordinates_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "b8599605dfd6ead8f2862bed579ca23c";
+    return "37cbff643f1dc0255bb6116eac4fca9b";
   }
 
   static const char* value(const ::perception::Coordinates_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xb8599605dfd6ead8ULL;
-  static const uint64_t static_value2 = 0xf2862bed579ca23cULL;
+  static const uint64_t static_value1 = 0x37cbff643f1dc025ULL;
+  static const uint64_t static_value2 = 0x5bb6116eac4fca9bULL;
 };
 
 template<class ContainerAllocator>
@@ -201,6 +213,8 @@ struct Definition< ::perception::Coordinates_<ContainerAllocator> >
 "float32 colour\n"
 "float32[] left\n"
 "float32[] right\n"
+"float32[] front\n"
+"float32[] back\n"
 "float32[] top\n"
 "float32[] bottom\n"
 ;
@@ -228,6 +242,8 @@ namespace serialization
       stream.next(m.colour);
       stream.next(m.left);
       stream.next(m.right);
+      stream.next(m.front);
+      stream.next(m.back);
       stream.next(m.top);
       stream.next(m.bottom);
     }
@@ -269,6 +285,18 @@ struct Printer< ::perception::Coordinates_<ContainerAllocator> >
     {
       s << indent << "  right[" << i << "]: ";
       Printer<float>::stream(s, indent + "  ", v.right[i]);
+    }
+    s << indent << "front[]" << std::endl;
+    for (size_t i = 0; i < v.front.size(); ++i)
+    {
+      s << indent << "  front[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.front[i]);
+    }
+    s << indent << "back[]" << std::endl;
+    for (size_t i = 0; i < v.back.size(); ++i)
+    {
+      s << indent << "  back[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.back[i]);
     }
     s << indent << "top[]" << std::endl;
     for (size_t i = 0; i < v.top.size(); ++i)

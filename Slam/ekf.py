@@ -24,7 +24,7 @@ delta_t=0
 bt=True
 cones=[]
 global landmark_indexes
-landmark_indexes= 37
+landmark_indexes= 50
 landmarks=[]
 num_landmarks=0
 prev_yaw=[0]
@@ -39,6 +39,7 @@ steer=0
 p=False
 o=True
 a=True
+ass=True
 xEst = np.zeros((STATE_SIZE, 1))
 orig_theta = 0
 
@@ -60,7 +61,7 @@ def ekf_slam():
 
     global xEst,PEst,z,cones,car_coordinate
     for i in range(len(cones)):
-        cones[i][2]= math.sqrt(((cones[i][0])*2)+((cones[i][1])*2))
+        cones[i][2]= math.sqrt(((cones[i][0])**2)+((cones[i][1])**2))
         cones[i][3]=math.atan(cones[i][1]/cones[i][0])
         cones[i][0]+= car_coordinate[0]
         cones[i][1]+= car_coordinate[1]
@@ -76,12 +77,12 @@ def ekf_slam():
     x=[]
     y=[]
     for i in cones:
-        a=True
+        ass=True
         for j in landmarks:
-            if(math.sqrt(((j[0]-i[0])**2)+((j[1]-i[1])**2))<0.4):
-                a=False
+            if(math.sqrt(((j[0]-i[0])**2)+((j[1]-i[1])**2))<1):
+                ass=False
                 break
-        if(a):
+        if(ass):
             landmarks.append(i)
     print(landmarks)
     for i in landmarks:
@@ -230,7 +231,7 @@ def update():
     K = np.dot(np.dot(PEst,H_f.T),np.linalg.inv(Psi_f))      #PEst.dot(H_f.T).dot(np.linalg.inv(Psi_f)) 
     innovation = np.dot(K,difference_f)
     print("innovation=",innovation[0],innovation[1],innovation[2])
-    if(abs(innovation[0])>1 or abs(innovation)[1]>1 ):
+    if(abs(innovation[0])>1 or abs(innovation)[1]>1.3 ):
         return
         
     xEst[0][0]+=innovation[0]*(1)
@@ -246,7 +247,7 @@ def update():
 
 def real(data):
     
-    global roll, pitch, yaw,a, orig_theta
+    global roll, pitch, yaw,a, orig_theta,xEst
     orientation_q = data.orientation
     orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
     (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
@@ -261,7 +262,7 @@ def real(data):
     # print("Yaw ",yaw)
     # print("2",orig_theta)
     yaw=(yaw-orig_theta) #t in degrees
-    xEst[2][0]=yaw
+    xEst[2][0]=math.radians(yaw)
     # print(yaw)
 
     

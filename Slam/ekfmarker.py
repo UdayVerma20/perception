@@ -87,7 +87,7 @@ def main():
         # print(markerArraylala) 
 
         marker_pub.publish(markerArraylala)
-        print("done")
+        # print("done")
 
         # Cycle between different shapes
         rate.sleep()

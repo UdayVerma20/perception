@@ -7,14 +7,14 @@
     <!-- </node> -->
 
     <!-- Diff Terminal launch-prefix="xterm -e" -->
-    <!-- <node pkg="perception" type="slam.py" name="Slam" output="screen">
-    </node>-->
+    <node pkg="perception" type="slam.py" name="Slam" output="screen">
+    </node>
     <node pkg="perception" type="marker.py" name="ConeMarker" output="screen">
     </node>
     <node pkg="perception" type="carmarker.py" name="CarMarker" output="screen">
     </node> 
-    <!-- <node pkg="perception" type="path_planning.py" name="Path_Planning" output="screen">
-    </node>-->
+    <node pkg="perception" type="path_planning.py" name="Path_Planning" output="screen">
+    </node> 
     <node pkg="perception" type="path.py" name="PathMarker" output="screen">
     </node> 
 

@@ -21,23 +21,29 @@ vel = 15
 error = 0.0		
 car_length = 0.50 
 b=True
+flag = 0
 
 leftcone=[]
 rightcone=[]
 car_coordinate=[0,0]
 yaw=0
+m = path_coordinates()
+
 pub = rospy.Publisher('/err', pid_input, queue_size=10)
 def imu_call(data):
 	global yaw
 	yaw=data.yaw
+	if (flag):
+		path_pub.publish(m)
+		print("m",m)
 
 def callback(data):
-	global car_coordinate,yaw
+	global car_coordinate,yaw, m, flag
 	car_coordinate=[0,0]
 	car_coordinate[0]=data.x
 	car_coordinate[1]=data.y
 	midpoints=[]
-
+	
 	# if(len(leftcone)==0 or len(rightcone)==0):
 	# 	leftcone.append(car_coordinate)
 	# 	rightcone.append(car_coordinate)
@@ -50,11 +56,12 @@ def callback(data):
 			mid.append((min_left[0]+min_right[0])/2)
 			mid.append((min_left[1]+min_right[1])/2)
 			midpoints.append(mid)
-
+		flag = 1
 		m=path_coordinates()
 		m.first=midpoints[0]
 		m.second=midpoints[1]
-		path_pub.publish(m)
+		# path_pub.publish(m)
+		# print("m",m)
 		num=midpoints[1][1]-midpoints[0][1]
 		den=(midpoints[1][0]-midpoints[0][0])
 

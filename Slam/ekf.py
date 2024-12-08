@@ -58,8 +58,9 @@ car_coordinate=[0,0]
 pub= rospy.Publisher('/landmark',landmark_points,queue_size=100)
 car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=10)
 def ekf_slam():
+    predict()
 
-    global xEst,PEst,z,cones,car_coordinate
+    global xEst,PEst,z,cones,car_coordinate,landmarks
     for i in range(len(cones)):
         cones[i][2]= math.sqrt(((cones[i][0])**2)+((cones[i][1])**2))
         cones[i][3]=math.atan(cones[i][1]/cones[i][0])
@@ -67,24 +68,31 @@ def ekf_slam():
         cones[i][1]+= car_coordinate[1]
     print("car",car_coordinate)
     # print(cones)  
-    
+    print("cones")
+    print(cones)
+    # for i in range(len(cones)):
+    #     cones[i][0]+= car_coordinate[0]
+    #     cones[i][1]+= car_coordinate[1]
 
-    for i in range(len(cones)):
-        cones[i][0]+= car_coordinate[0]
-        cones[i][1]+= car_coordinate[1]
+    # predict()
 
-    predict()
+
+    current_coordinate = Coordinates()
+    current_coordinate.x =xEst[0][0]
+    current_coordinate.y =xEst[1][0]
+    car_coordinate_pub.publish(current_coordinate)
     x=[]
     y=[]
+
     for i in cones:
         ass=True
         for j in landmarks:
-            if(math.sqrt(((j[0]-i[0])**2)+((j[1]-i[1])**2))<1):
+            if(math.sqrt(((j[0]-i[0])**2)+((j[1]-i[1])**2))<1.2):
                 ass=False
                 break
         if(ass):
             landmarks.append(i)
-    print(landmarks)
+    # print(landmarks)
     for i in landmarks:
         x.append(i[0])
         y.append(i[1])
@@ -94,10 +102,10 @@ def ekf_slam():
     msg.land_y=y
     pub.publish(msg)
 
-    current_coordinate = Coordinates()
-    current_coordinate.x =xEst[0][0]
-    current_coordinate.y =xEst[1][0]
-    car_coordinate_pub.publish(current_coordinate)
+    # current_coordinate = Coordinates()
+    # current_coordinate.x =xEst[0][0]
+    # current_coordinate.y =xEst[1][0]
+    # car_coordinate_pub.publish(current_coordinate)
         
     # for measurement in cones:
     #     #H_f,Psi_f,difference_f,K=data_association(xEst,PEst,measurement,z)
@@ -121,7 +129,7 @@ def predict():
     
     print("------------------------------------------------------------------------")
     theta=xEst[2][0]
-    print("theta=",theta)
+    print("theta=",math.degrees(theta))
     xEst[2][0]=theta
     x=xEst[0][0]+0.205*np.cos(xEst[2][0])
     y=xEst[1][0]+0.205*np.sin(xEst[2][0])
@@ -166,7 +174,7 @@ def temp_dataassociation(measurement):
             index=j
         j=j+1
     #print(landmarks[index])
-    if ((index==0 and min>1.2) or (min>1)):
+    if ((index==0 and min>1.2) or (min>1.2)):
         #print("not stored")
         return
     x_t=xEst[0][0]
@@ -261,7 +269,7 @@ def real(data):
         a=False
     # print("Yaw ",yaw)
     # print("2",orig_theta)
-    yaw=(yaw-orig_theta) #t in degrees
+    yaw=yaw-orig_theta #t in degrees
     xEst[2][0]=math.radians(yaw)
     # print(yaw)
 

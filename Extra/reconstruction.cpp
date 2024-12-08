@@ -44,7 +44,8 @@ void plane_cb(ground_removal::arrofarr inputplanes)
   ground.clear();
   for(auto i:inputplanes.data){
       ground[int(round(i.data[0]))] = {i.data[1], i.data[2], i.data[3], i.data[4]};
-  }}
+  }
+}
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
@@ -57,11 +58,12 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     for(int cluster_index = 0; cluster_index < clusters.size; cluster_index++){
         if(((cloudtomanipulate->points)[index].x >= clusters.ConeCoordinates[cluster_index].x - lengthcuboid && (cloudtomanipulate->points)[index].x <= clusters.ConeCoordinates[cluster_index].x + lengthcuboid)
         && ((cloudtomanipulate->points)[index].y >= clusters.ConeCoordinates[cluster_index].y - widthcuboid && (cloudtomanipulate->points)[index].y <= clusters.ConeCoordinates[cluster_index].y + widthcuboid)
-        && ((cloudtomanipulate->points)[index].z >= clusters.ConeCoordinates[cluster_index].z - heightcuboid && (cloudtomanipulate->points)[index].z <= clusters.ConeCoordinates[cluster_index].z + heightcuboid)        
+        // && ((cloudtomanipulate->points)[index].z >= clusters.ConeCoordinates[cluster_index].z - heightcuboid && (cloudtomanipulate->points)[index].z <= clusters.ConeCoordinates[cluster_index].z + heightcuboid)        
         ){
             // Not updating avg
             reconstructedcloud->push_back((cloudtomanipulate->points)[index]);
             clusters.ConeCoordinates[cluster_index].reconsize++;
+
             // if (clusters.ConeCoordinates[cluster_index].front[0] > (cloudtomanipulate->points)[index].x){
             //     clusters.ConeCoordinates[cluster_index].front = {(cloudtomanipulate->points)[index].x,(cloudtomanipulate->points)[index].y,(cloudtomanipulate->points)[index].z};
             // }
@@ -84,6 +86,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     }
   }
   ROS_INFO("Publishing to ReconstructedGround");
+  
   reconground.publish (*reconstructedcloud);
   pcl::PointCloud<pcl::PointXYZI>::Ptr reconstructedcluster(new pcl::PointCloud<pcl::PointXYZI>);
   reconstructedcluster->header.frame_id = lidarframe;
@@ -102,7 +105,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     //     }
     // }
     
-    //checking cone distance from lu planes
+    // // checking cone distance from lu planes
     // int ringclus = pow(pow(Iter_Cluster.x, 2)+pow(Iter_Cluster.y, 2), 0.5)/ringlength;
     // float angleclus = atan2(Iter_Cluster.x, -Iter_Cluster.y) - M_PI/6;
     // int key = int((angleclus)/(sectorangle)) + int((2*M_PI*ringclus)/(3*sectorangle));
@@ -114,21 +117,20 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     
     if ( //checks
     1
-    && ((abs(Iter_Cluster.size - Iter_Cluster.reconsize)/Iter_Cluster.size) < 1)
-    // && ( Iter_Cluster.reconsize>=expected_points*0.2 )
-    // && (Iter_Cluster.reconsize > MinPoints)
-    // && ( Iter_Cluster.reconsize<=expected_points )
+    && ( (abs(Iter_Cluster.size - Iter_Cluster.reconsize)/Iter_Cluster.size) < 1 )
+    // && ( Iter_Cluster.reconsize >= expected_points*0.2 )
+    // && ( Iter_Cluster.reconsize > MinPoints )
+    // && ( Iter_Cluster.reconsize <= expected_points )
     // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] > 0.1 )
     // && ( Iter_Cluster.top[2]-Iter_Cluster.bottom[2] < 0.5 )
     // && ( abs(Iter_Cluster.left[1]-Iter_Cluster.right[1]) > 0.02 )
     // && ( abs(Iter_Cluster.left[1]-Iter_Cluster.right[1]) < 0.2 )
-    // // && (Iter_Cluster.z + LidarHeight < MaxHeight)
-    // // && (Iter_Cluster.z + LidarHeight > MinHeight)
-    // // && (maxzfromground >= 0.21 )
-    // // && (minzfromground <= 0.1 )
-    // && ((Iter_Cluster.right[1] - Iter_Cluster.left[1])*(Iter_Cluster.right[1] - Iter_Cluster.left[1]) + (Iter_Cluster.right[0] - Iter_Cluster.left[0])*(Iter_Cluster.right[0] - Iter_Cluster.left[0]) < MaxWidth*MaxWidth)
-    // && (Iter_Cluster.x*Iter_Cluster.x + Iter_Cluster.y*Iter_Cluster.y < 30)
-    
+    // // && ( Iter_Cluster.z + LidarHeight < MaxHeight )
+    // // && ( Iter_Cluster.z + LidarHeight > MinHeight )
+    // // && ( maxzfromground >= 0.21 )
+    // // && ( minzfromground <= 0.1 )
+    // && ( (Iter_Cluster.right[1] - Iter_Cluster.left[1])*(Iter_Cluster.right[1] - Iter_Cluster.left[1]) + (Iter_Cluster.right[0] - Iter_Cluster.left[0])*(Iter_Cluster.right[0] - Iter_Cluster.left[0]) < MaxWidth*MaxWidth)
+    // && ( Iter_Cluster.x*Iter_Cluster.x + Iter_Cluster.y*Iter_Cluster.y < 30)    
     ){
       pcl::PointXYZI point;
       point.x = Iter_Cluster.x;
@@ -144,10 +146,11 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
     //   clusters.ConeCoordinates.erase(clusters.ConeCoordinates.begin() + i);
     // }
   }
-  
+
   ROS_INFO("Publishing to ReconstructedCluster and ReconstructedPc");
   reconcluster.publish(recon_clusters);
   reconclusterpc.publish(reconstructedcluster);
+
 }
 
 int main(int argc, char **argv)

@@ -46,7 +46,7 @@ def Imucall(data):
 	orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
 	(roll, pitch, yaw) = euler_from_quaternion (orientation_list)
 	yaw = math.degrees(yaw)
-	print("1",yaw)
+	# print("1",yaw)
 	
 	if yaw<0:
 		yaw +=360
@@ -58,21 +58,22 @@ def Imucall(data):
 		# theta=yaw - orig_theta
 		# yaw_t1=yaw - orig_theta
 		a=False
-	print("Yaw ",yaw)
-	print("2",orig_theta)
-	t=(yaw-orig_theta)
-	print(t)
-	
-
-def call(data):
-	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta,cones
-	d=0.205
+	# print("Yaw ",yaw)
+	# print("2",orig_theta)
+	# t=(yaw-orig_theta)
+	# print(t)
 	theta =math.radians(yaw-orig_theta)
 	# print(theta)
 	message=imu()
 	message.yaw=theta
 	
 	imu_pub.publish(message)
+	
+
+def call(data):
+	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta,cones
+	d=0.205
+	
 
 	# print("theta",theta)
 	# yaw_t1=yaw

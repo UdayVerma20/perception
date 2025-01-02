@@ -42,6 +42,7 @@ a=True
 ass=True
 xEst = np.zeros((STATE_SIZE, 1))
 orig_theta = 0
+sigma=[]
 
 PEst = 1e-30 * np.full((3 + 2 * landmark_indexes, 3 + 2 * landmark_indexes), 1)
 for i in range(3, 3 + 2 * landmark_indexes):
@@ -57,8 +58,8 @@ car_coordinate=[0,0]
 
 pub= rospy.Publisher('/landmark',landmark_points,queue_size=100)
 car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=10)
-def ekf_slam():
-    predict()
+def ekf_slam(distance):
+    predict(distance)
 
     global xEst,PEst,z,cones,car_coordinate,landmarks
     for i in range(len(cones)):
@@ -68,8 +69,8 @@ def ekf_slam():
         cones[i][1]+= car_coordinate[1]
     print("car",car_coordinate)
     # print(cones)  
-    print("cones")
-    print(cones)
+    # print("cones")
+    # print(cones)
     # for i in range(len(cones)):
     #     cones[i][0]+= car_coordinate[0]
     #     cones[i][1]+= car_coordinate[1]
@@ -120,8 +121,8 @@ def ekf_slam():
     # print(xEst)
 
 
-def predict():
-    global xEst,PEst,delta_t, landmark_indexes
+def predict(distance):
+    global xEst,PEst,delta_t, landmark_indexes,sigma
     
     print("starting")
     print(xEst)
@@ -131,8 +132,8 @@ def predict():
     theta=xEst[2][0]
     print("theta=",math.degrees(theta))
     xEst[2][0]=theta
-    x=xEst[0][0]+0.205*np.cos(xEst[2][0])
-    y=xEst[1][0]+0.205*np.sin(xEst[2][0])
+    x=xEst[0][0]+distance*np.cos(xEst[2][0])
+    y=xEst[1][0]+distance*np.sin(xEst[2][0])
     #x=xEst[0][0]+0.2*np.cos(xEst[2][0])
     #y=xEst[1][0]+0.2*np.sin(xEst[2][0])
     '''
@@ -221,7 +222,96 @@ def temp_dataassociation(measurement):
     #if(abs(difference_f[0][0])>0.25):
     update()
 
+def data_association(measurement):
+    # print("landmarks",landmarks)
+    global  car_coordinate, xEst, PEst,Q,Psi_f,difference_f,H_f,sigma
+    # measurement=[x,y,range,bearing]
+    print("measurement=",measurement)
+    print("bearing_t=",math.degrees(measurement[3]))
+    # Get current robot state, measurement
+    x_t=xEst[0][0]
+    y_t=xEst[1][0]
+    theta_t=xEst[2][0]
+    range_t=measurement[2]
+    bearing_t=measurement[3]
 
+    
+    landmark_expected_x=measurement[0]
+    landmark_expected_y=measurement[1]
+    
+    msg=covariance()
+    total=[]
+    
+    min_distance = 1e16
+    count=0
+    c=3
+    print("landmarks=",landmarks)
+    for i in landmarks:
+        count+=1
+        # Get current landmark estimate
+        # x_l=x_t+ range_t*math.cos(bearing_t)                #car_coordinate[0]+ range_t*math.cos(bearing_t)
+        # y_l=y_t+ range_t*math.sin(bearing_t)                #car_coordinate[1]+ range_t*math.sin(bearing_t)
+        x_l=i[0]
+        y_l=i[1]
+
+        delta_x = x_l - x_t
+        delta_y = y_l - y_t
+        q = (delta_x*delta_x) + (delta_y*delta_y)
+        range_expected = np.sqrt(q)
+        bearing_expected = np.arctan2(delta_y, delta_x) 
+        print("bearing_expected=",math.degrees(bearing_expected))
+        # print(bearing_t,bearing_expected)
+
+        # Compute Jacobian H of Measurement Model
+        # Jacobian: H = d h(x_t, x_l) / d (x_t, x_l)
+        #        1 0 0  0 ...... 0   0 0   0 ...... 0
+        #        0 1 0  0 ...... 0   0 0   0 ...... 0
+        # F_x =  0 0 1  0 ...... 0   0 0   0 ...... 0
+        #        0 0 0  0 ...... 0   1 0   0 ...... 0
+        #        0 0 0  0 ...... 0   0 1   0 ...... 0
+        #          (2*landmark_idx - 2)
+        #          -delta_x/√q  -delta_y/√q  0  delta_x/√q  delta_y/√q
+        # H_low =   delta_y/q   -delta_x/q  -1  -delta_y/q  delta_x/q
+        #               0            0       0       0          0
+        # H = H_low x F_x
+        F_x = np.zeros((5, 3 + 2 * (landmark_indexes)))
+        F_x[0][0] = 1.0
+        F_x[1][1] = 1.0
+        F_x[2][2] = 1.0
+        F_x[3][2 * count + 1] = 1.0
+        F_x[4][2 * count + 2] = 1.0
+        H_1 = np.array([-delta_x/np.sqrt(q), -delta_y/np.sqrt(q), 0, delta_x/np.sqrt(q), delta_y/np.sqrt(q)])
+        H_2 = np.array([delta_y/q, -delta_x/q, -1, -delta_y/q, delta_x/q])
+        H_3 = np.array([0, 0, 0, 0, 0])
+        H = np.array([H_1, H_2, H_3]).dot(F_x)
+
+        # Compute Mahalanobis distance
+        Psi = np.dot(np.dot(H,sigma),np.transpose(H))+ Q
+        # Psi += np.eye(Psi.shape[0]) * 1e-6
+        # difference =  np.array([range_t-range_expected,bearing_t-bearing_expected,0])
+        difference = np.array([range_expected-range_t,bearing_expected-bearing_t, 0])
+        Pi = difference.T.dot(np.linalg.inv(Psi)).dot(difference)
+        # print("pi=",Pi)
+        total.append(i[0])
+        total.append(i[1])
+        # print("PEst[c][c]",PEst[c][c])
+        # print("PEst[c+1][c+1]",PEst[c+1][c+1])
+        total.append(math.sqrt(PEst[c][c]))
+        total.append(math.sqrt(PEst[c+1][c+1]))
+        c+=2
+      
+        # Get landmark information with least distance
+        if Pi < min_distance:
+            print("final=",i)
+            min_distance = Pi
+            # Values for measurement update
+            H_f = H
+            Psi_f = Psi
+            difference_f = difference
+
+    msg.c=total
+    cov_pub.publish(msg) 
+    update()    
 
 def update():
     """
@@ -311,7 +401,7 @@ def call(data):
 
 def halleffect(data):
     print("lulli")
-    ekf_slam()
+    ekf_slam(data.data)
 
 
 

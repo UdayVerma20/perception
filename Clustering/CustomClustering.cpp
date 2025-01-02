@@ -164,7 +164,7 @@ public:
                             
                             // (Clusters_Vector[index].gradient[(int)(point.z*100)].Value)+= point.intensity;
                             // (Clusters_Vector[index].gradient[(int)(point.z*100)].size)++;
-                            //Clusters_Vector[index].clustersize++;
+                            // Clusters_Vector[index].clustersize++;
                             // Iter_Cluster.PointsArr.push_back(point);
                             // std::cout<<"A"<<i<<std::endl;
                             // Iter_Cluster.Centre_x += point.x;

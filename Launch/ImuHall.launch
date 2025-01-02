@@ -3,7 +3,7 @@
     <!-- IMU -->
     <include file= "$(find sparton_ahrs8_driver)/launch/ahrs-8.launch"/>
     <!-- HALL EFFECT ARDUINO -->
-    <node pkg="$(find rosserial_arduino)" type="serial_node.py" name="serial_node" args="-d /dev/ttyACM0" output="screen">
+    <node pkg="$(find rosserial_arduino)" type="serial_node.py" name="serial_node" args="-d /dev/ttyUSB1" output="screen">
     </node>
 
     <!-- RVIZ -->

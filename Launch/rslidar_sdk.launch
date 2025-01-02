@@ -12,7 +12,7 @@
     </node>
     <node pkg="perception" type="DonSegmenation" name="DonSegmenation" output="screen">
     </node>-->
-    <node pkg="ground_removal" type="amzphy" name="amzphy" output="screen">
+    <node pkg="ground_removal" type="morerecentluphy" name="morerecentluphy">
     </node>
     <node pkg="clustering" type="custom" name="custom" output="screen">
     </node>

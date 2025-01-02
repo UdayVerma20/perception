@@ -43,7 +43,7 @@ def call(data):
 
 def main():
     rospy.init_node("CarMarker")
-    marker_pub = rospy.Publisher("/track_viz", Marker, queue_size=100)
+    marker_pub = rospy.Publisher("/track_viz", Marker, queue_size=1)
     rate = rospy.Rate(1)
     rospy.Subscriber("/CarCoordinate",Coordinates, call)
     # Set our initial shape type to be a cube
@@ -65,6 +65,7 @@ def main():
 
         # Set the marker action
         marker.action = Marker.ADD
+        marker.lifetime = rospy.Duration(0.0)
 
         # Set the pose of the marker
         

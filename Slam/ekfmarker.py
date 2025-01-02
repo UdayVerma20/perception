@@ -28,7 +28,7 @@ count = 0
 
 def main():
     rospy.init_node("EKFMarker")
-    marker_pub = rospy.Publisher("/ekf_visualization_marker", MarkerArray, queue_size=100)
+    marker_pub = rospy.Publisher("/ekf_visualization_marker", MarkerArray, queue_size=1)
     rate = rospy.Rate(1)
     rospy.Subscriber('/landmark',landmark_points, call)
 
@@ -55,7 +55,7 @@ def main():
 
             # Set the marker action
             marker.action = Marker.ADD
-            marker.lifetime = rospy.Duration(0.0)
+            marker.lifetime = rospy.Duration(0.2)
 
             # Set the pose of the marker
             marker.pose.position.x = i[0]  # Set the position from the data

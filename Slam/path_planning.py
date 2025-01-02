@@ -43,7 +43,8 @@ def callback(data):
 	car_coordinate[0]=data.x
 	car_coordinate[1]=data.y
 	midpoints=[]
-	
+	print(car_coordinate)
+	print(len(leftcone))
 	# if(len(leftcone)==0 or len(rightcone)==0):
 	# 	leftcone.append(car_coordinate)
 	# 	rightcone.append(car_coordinate)

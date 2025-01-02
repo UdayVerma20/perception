@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(PCL 1.2 REQUIRED)
+find_package(OpenCV REQUIRED)
 # find_package(OpenCV REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -164,8 +165,10 @@ add_executable (SensorFusion Extra/SensorFusion.cpp)
 target_link_libraries (SensorFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (VoxelDownsample Extra/VoxelDownsample.cpp)
 target_link_libraries (VoxelDownsample ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-# add_executable(Img Extra/Img.cpp)
-# target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(Img Extra/Img.cpp)
+target_link_libraries(Img ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(checkorder Extra/checkorder.cpp)
+target_link_libraries(checkorder ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #Clustering
 add_executable (Clustering Clustering/Clustering.cpp)

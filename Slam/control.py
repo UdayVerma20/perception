@@ -7,7 +7,7 @@ from perception.msg import pid_input
 kp=1
 kd=0
 prev_error=0
-scale = 1.15
+scale = 1.2
 pub= rospy.Publisher('MotorControl',Float32,queue_size=10)
 def callback(data):
     global kp,kd,prev_error
@@ -18,11 +18,14 @@ def callback(data):
     a=(kp*error + kd*(error-prev_error))#{-kd,kp+kd} 
     a = (a + kd)/(kp + 2*kd) # {0,1}
     # a = error
-    a = ((a*800) + 100)
-    if (a>500):
+    a = ((a*450) + 100)
+    if (a>275):
         a *= scale
+        a = min(a,600)
     else:
         a /= scale
+        a = max(a,100)
+    
     print(a)
     
     prev_error=error

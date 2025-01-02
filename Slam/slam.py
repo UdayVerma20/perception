@@ -21,7 +21,7 @@ min_right_coordinate=[-1,-1]
 left_cone_coordinates=[]
 right_cone_coordinates=[]
 pub= rospy.Publisher('/slam_to_distfinder',uday,queue_size=10)
-car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=10)
+car_coordinate_pub = rospy.Publisher('/CarCoordinate',Coordinates,queue_size=1)
 imu_pub=rospy.Publisher('/Imu_yaw',imu,queue_size=1)
 prev_yaw=0 
 prev_m=0
@@ -33,6 +33,7 @@ yaw=0
 b=True
 theta=0
 a=True
+clus = True
 cones=[]
 orig_theta = 0
 
@@ -45,6 +46,7 @@ def Imucall(data):
 	orientation_q = data.orientation
 	orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
 	(roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+	# print("Y",yaw)
 	yaw = math.degrees(yaw)
 	# print("1",yaw)
 	
@@ -63,7 +65,7 @@ def Imucall(data):
 	# t=(yaw-orig_theta)
 	# print(t)
 	theta =math.radians(yaw-orig_theta)
-	# print(theta)
+	# print("theta", yaw-orig_theta)
 	message=imu()
 	message.yaw=theta
 	
@@ -72,13 +74,16 @@ def Imucall(data):
 
 def call(data):
 	global theta,car_coordinate,min_distance, min_left_coordinate,min_right_coordinate,left_cone_coordinates,right_cone_coordinates,b,cones, yaw, yaw_t1, orig_theta,cones
-	d=0.205
+	# d=0.205
+	if (clus):
+		return
+	d = data.data
 	
 
 	# print("theta",theta)
 	# yaw_t1=yaw
-	car_coordinate[0]+=d*np.cos(theta)
-	car_coordinate[1]+=d*np.sin(theta)
+	car_coordinate[0] += d*np.cos(theta)
+	car_coordinate[1] += d*np.sin(theta)
 	current_coordinate = Coordinates()
 	current_coordinate.x = car_coordinate[0]
 	current_coordinate.y = car_coordinate[1]
@@ -91,7 +96,7 @@ def call(data):
 		cones[i][0]+= car_coordinate[0]
 		cones[i][1]+= car_coordinate[1]
 	print("------------------------------")
-	# print("cones=",cones)
+	print("cones=",cones)
 	
 	# car_coordinate[1]+=d
 	# print("car_x",car_coordinate[0])
@@ -103,17 +108,17 @@ def call(data):
 		reference_x=(left_cone_coordinates[-1][0]+right_cone_coordinates[-1][0])/2
 		reference_y=(left_cone_coordinates[-1][1]+right_cone_coordinates[-1][1])/2
 	reference=[reference_x,reference_y]
-	# print("reference",reference)
+	print("reference",reference)
 	cones_new=[]
 	flag=[1]*len(cones)
 	if(len(left_cone_coordinates)!=0 and len(right_cone_coordinates)!=0):
 		for i in range(0,len(cones)):
 			for j in range(0,len(left_cone_coordinates)):
 				p=[cones[i][0],cones[i][1]]
-				print("distleft",left_cone_coordinates[j],p,distance(left_cone_coordinates[j],p))
-				print("distright",right_cone_coordinates[j],p,distance(right_cone_coordinates[j],p))
+				# print("distleft",left_cone_coordinates[j],p,distance(left_cone_coordinates[j],p))
+				# print("distright",right_cone_coordinates[j],p,distance(right_cone_coordinates[j],p))
 				if(distance(left_cone_coordinates[j],p)<1 or distance(right_cone_coordinates[j],p)<1 ):
-					print("removed",p)
+					# print("removed",p)
 					flag[i]=0
 					#cones_new.append(cones[i])
 
@@ -127,7 +132,7 @@ def call(data):
 		# cones=cones_new
 		#print("cones_new",cones)
 	
-	# print(cones)
+	print("c",cones)
 	for i in range(0,len(cones)):
 		for j in range(i+1,len(cones)):
 			mid_x=(cones[i][0]+cones[j][0])/2
@@ -149,8 +154,8 @@ def call(data):
 				r[1]=cones[i][1]
 				min_left_coordinate=l
 				min_right_coordinate=r
-	# print("min left coordinate=",min_left_coordinate)
-	# print("min right coordinate=",min_right_coordinate)
+	print("min left coordinate=",min_left_coordinate)
+	print("min right coordinate=",min_right_coordinate)
 
 	if(len(left_cone_coordinates)==0 and distance(reference,car_coordinate)<1):
 		left_cone_coordinates.append(min_left_coordinate)
@@ -159,7 +164,7 @@ def call(data):
 		message.leftcone=min_left_coordinate
 		message.rightcone=min_right_coordinate
 		pub.publish(message)
-		# print("published")
+		print("published")
 		min_distance=10000
 		min_left_coordinate=[-1,-1]
 		min_right_coordinate=[-1,-1]
@@ -169,6 +174,7 @@ def call(data):
 		B1=right_cone_coordinates[-1][0]-left_cone_coordinates[-1][0]
 		C1=(left_cone_coordinates[-1][0]*right_cone_coordinates[-1][1])-(right_cone_coordinates[-1][0]*left_cone_coordinates[-1][1])
 		d=(abs((A1*car_coordinate[0])+(B1*car_coordinate[1]+C1))/math.sqrt((A1**2)+(B1**2)))
+		# print("d", d)
 		if(d<1):
 			left_cone_coordinates.append(min_left_coordinate)
 			right_cone_coordinates.append(min_right_coordinate)
@@ -176,7 +182,7 @@ def call(data):
 			message.leftcone=min_left_coordinate
 			message.rightcone=min_right_coordinate
 			pub.publish(message)
-			# print("published")
+			print("published")
 			min_distance=10000
 			min_left_coordinate=[-1,-1]
 			min_right_coordinate=[-1,-1]
@@ -187,6 +193,8 @@ def call(data):
 
 
 def callbackabx(data):
+	global clus
+	clus = False
 	# print("hi")
 	global cones
 	cones = []
@@ -199,6 +207,7 @@ if __name__ == "__main__":
 	print("SLAM")
 	rospy.init_node('Slam')
 	rospy.Subscriber("/Clusters", CoordinateList, callbackabx)
+	# rospy.Subscriber("/FusedCoordinates", CoordinateList, callbackabx)
 	rospy.Subscriber("/distance_hall",Float32, call)
 	rospy.Subscriber("/imu/data", Imu, Imucall)
 	rospy.spin()

@@ -78,6 +78,8 @@ def call(data):
 	if (clus):
 		return
 	d = data.data
+	print("d=",d)
+	print("theta=",math.degrees(theta))
 	
 
 	# print("theta",theta)
@@ -88,7 +90,7 @@ def call(data):
 	current_coordinate.x = car_coordinate[0]
 	current_coordinate.y = car_coordinate[1]
 	current_coordinate.z = theta
-	
+	print("Current Coordinates ", current_coordinate)
 	# current_coordinate.z = current_coordinate.color = 0
 	car_coordinate_pub.publish(current_coordinate)
 	# print(cones)
@@ -117,7 +119,7 @@ def call(data):
 				p=[cones[i][0],cones[i][1]]
 				# print("distleft",left_cone_coordinates[j],p,distance(left_cone_coordinates[j],p))
 				# print("distright",right_cone_coordinates[j],p,distance(right_cone_coordinates[j],p))
-				if(distance(left_cone_coordinates[j],p)<1 or distance(right_cone_coordinates[j],p)<1 ):
+				if(distance(left_cone_coordinates[j],p)<2 or distance(right_cone_coordinates[j],p)<2 ):
 					# print("removed",p)
 					flag[i]=0
 					#cones_new.append(cones[i])
@@ -139,9 +141,11 @@ def call(data):
 			mid_y=(cones[i][1]+cones[j][1])/2
 			mid=[mid_x,mid_y]
 			minimum=distance(reference,mid)
-			# print("first cone=",cones[i])
-			# print("second cone=",cones[j])
-			# print("distance between them=",minimum)
+			print("==")
+			print("first cone=",cones[i])
+			print("second cone=",cones[j])
+			print("distance between them=",minimum)
+			print("--")
 			if(minimum<min_distance):
 				min_distance=minimum
 				#the coordinates of cones recieved are in order in which they are scaned by the lidar from right to left so when distance is observed cones[i] will

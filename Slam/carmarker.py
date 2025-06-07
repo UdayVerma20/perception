@@ -33,7 +33,7 @@ def call(data):
     global global_distance
     if(len(total)>1):
         global_distance += ((total[-1][0]-total[-2][0])**2 + (total[-1][1]-total[-2][1])**2)**0.5
-    print("Global Distance ", global_distance)
+    # print("Global Distance ", global_distance)
 
 
 

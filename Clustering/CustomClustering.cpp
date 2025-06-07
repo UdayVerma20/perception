@@ -16,7 +16,7 @@
 // #include <pcl/impl/point_types.hpp>
 // #include <pcl/filters/filter.h>
 
-#define LidarSource "rslidar"
+#define LidarSource "velodyne"
 
 //ConeCheck
 #define LidarHeight 0.25
@@ -91,7 +91,7 @@ public:
         Clusters = ClusteringHandle.advertise<perception::CoordinateList>("Clusters", 1000);
         Clusters_pc = ClusteringHandle.advertise<pcl::PointCloud<PointType>>("Clusters_PointCloud", 1000);
         // All_Clusters_pc = ClusteringHandle.advertise<pcl::PointCloud<PointType>>("All_Clusters_PointCloud", 100);
-        Subscribe = ClusteringHandle.subscribe("nogroundcloud", 10, &Clustering::callback, this);
+        Subscribe = ClusteringHandle.subscribe("ConeCloud", 10, &Clustering::callback, this);
         //timer(ClusteringHandle.createTimer(ros::Duration(0.1), &GroundRemoval::main_loop, this));
     }
 
@@ -252,7 +252,7 @@ public:
                 && (Iter_Cluster.clustersize < expected_points)
                 // && (Iter_Cluster.clustersize > 0.13 * expected_points)
                 // // && (Iter_Cluster.Right.y - Iter_Cluster.Left.y < MaxWidth)
-                && (Iter_Cluster.clustersize > MinPoints)
+                // && (Iter_Cluster.clustersize > MinPoints)
                 // && (curr_colour == 0)
                 ){
                     Cluster.size++;
@@ -267,8 +267,8 @@ public:
                     CurrentCluster.bottom = {Iter_Cluster.minheight.x, Iter_Cluster.minheight.y, Iter_Cluster.minheight.z};
                     
                     // CurrentCluster.colour = curr_colour;
-                    std::cout << "Cone " <<Iter_Cluster.clustersize<<" "//<<curr_colour<<" "
-                    <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;
+                    // std::cout << "Cone " <<Iter_Cluster.clustersize<<" "//<<curr_colour<<" "
+                    // <<Iter_Cluster.Avg.x<<" "<<Iter_Cluster.Avg.y<<" "<<Iter_Cluster.Avg.z<<" "<<std::endl; //<<" "<<dist_sq*Iter_Cluster.clustersize<< std::endl;
                     Cluster.ConeCoordinates.push_back(CurrentCluster);
                     cluster_pc->push_back(Iter_Cluster.Avg);
                 
@@ -296,7 +296,7 @@ public:
         }
 
         Clusters.publish(Cluster);
-        std::cout<<"Publishing Cone Coordinates"<<std::endl;
+        std::cout<<"Performing Clustering"<<std::endl;
     }
 
 private:

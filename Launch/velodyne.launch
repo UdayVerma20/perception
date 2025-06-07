@@ -1,12 +1,17 @@
 <?xml version="1.0"?>
 <launch>
-    <include file= "$(find eufs_gazebo)/launch/small_track.launch"/>
+    <!-- <include file= "$(find eufs_gazebo)/launch/small_track.launch"/> -->
     <!--<node pkg="perception" type="LidarHeightRemoval" name="LidarHeightRemoval" output="screen">
     </node>
     <<node pkg="perception" type="VoxelDownsample" name="VoxelDownsample" output="screen">
     </node>-->
-    <node pkg="perception" type="GroundRemoval" name="GroundRemoval" output="screen">
+    <node pkg="rviz" name="slam_rviz" type="rviz" args="-d $(find perception)/rviz/perceptionsim.rviz" />
+    <param name="path_to_config" type="string" value="/home/uday/catkin_ws/src/yolov9_ros/ros/config/config.yaml" />
+    <node pkg="yolov9_ros" type="detect_ros.py" name="detect_ros" output="screen">
+    </node>
+    <node pkg="perception" type="Lu" name="Lu" output="screen">
     </node>
     <node pkg="perception" type="CustomClustering" name="CustomClustering" output="screen">
     </node>
+    <include file= "$(find robot_control)/launch/rqt_robot_control.launch"/>
 </launch>

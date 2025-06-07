@@ -15,8 +15,8 @@ from perception.msg import imu
 from perception.msg import path_coordinates
 
 path_pub= rospy.Publisher('/path',path_coordinates,queue_size=10)
-
-forward_projection = 0.5  #0.5	
+# control_pub= rospy.Publisher('/MotorControl',Float32,queue_size=10)
+forward_projection = 3  #0.5	
 vel = 15 		
 error = 0.0		
 car_length = 0.50 
@@ -31,11 +31,15 @@ m = path_coordinates()
 
 pub = rospy.Publisher('/err', pid_input, queue_size=10)
 def imu_call(data):
-	global yaw
+	global yaw,flag
 	yaw=data.yaw
 	if (flag):
+		# if (m.first != [-1.0,-1.0] and m.second != [-1.0, -1.0]):
 		path_pub.publish(m)
 		print("m",m)
+		# else :
+		# 	control_pub.publish()
+
 
 def callback(data):
 	global car_coordinate,yaw, m, flag
@@ -43,8 +47,8 @@ def callback(data):
 	car_coordinate[0]=data.x
 	car_coordinate[1]=data.y
 	midpoints=[]
-	print(car_coordinate)
-	print(len(leftcone))
+	# print(car_coordinate)
+	# print(len(leftcone))
 	# if(len(leftcone)==0 or len(rightcone)==0):
 	# 	leftcone.append(car_coordinate)
 	# 	rightcone.append(car_coordinate)
@@ -76,12 +80,15 @@ def callback(data):
 
 		if(val<0):
 			ideal=ideal*(-1)
-
+    
 		A=midpoints[0][1]-midpoints[1][1]
 		B=midpoints[1][0]-midpoints[0][0]
 		C=(midpoints[0][0]*midpoints[1][1])-(midpoints[1][0]*midpoints[0][1])
 		err=(abs((A*car_coordinate[0])+(B*car_coordinate[1]+C))/math.sqrt((A**2)+(B**2)))
-		d=((car_coordinate[0]-midpoints[0][0])*(midpoints[1][1]-midpoints[0][1]))-((car_coordinate[1]-midpoints[0][1])*(midpoints[1][0]-midpoints[0][1]))
+		# d=((car_coordinate[0]-midpoints[0][0])*(midpoints[1][1]-midpoints[0][1]))-((car_coordinate[1]-midpoints[0][1])*(midpoints[1][0]-midpoints[0][0]))
+		d = ((midpoints[1][1] - midpoints[0][1])* car_coordinate[0]) - ((midpoints[1][0] - midpoints[0][0])*car_coordinate[1]) + (midpoints[1][0]*midpoints[0][1]) - (midpoints[0][0]*midpoints[1][1])
+		#\left(y_{2}-y_{1}\right)x-\left(x_{2}-x_{1}\right)y+\left(x_{2}y_{1}-x_{1}y_{2}\right)
+		# midpoint 0 1 to 0 0 kiya hai
 		# dist_car_left= math.sqrt(((leftcone[-1][0]-car_coordinate[0])**2)+((leftcone[-1][1]-car_coordinate[1])**2))
 		# dist_car_right= math.sqrt(((rightcone[-1][0]-car_coordinate[0])**2)+((rightcone[-1][1]-car_coordinate[1])**2))
 		print("Yaw ", math.degrees(yaw), "Ideal ", math.degrees(ideal),math.degrees(yaw)-math.degrees(ideal))

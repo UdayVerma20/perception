@@ -59,7 +59,7 @@ Visualization Manager:
       Marker Topic: /marker_visualization_marker
       Name: MarkerArray
       Namespaces:
-        {}
+        basic_shapes: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -75,7 +75,7 @@ Visualization Manager:
       Marker Topic: /track_viz
       Name: Marker
       Namespaces:
-        {}
+        basic: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -83,7 +83,7 @@ Visualization Manager:
       Marker Topic: /marker_visualization_marker
       Name: MarkerArray
       Namespaces:
-        {}
+        basic_shapes: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -150,5 +150,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1917
-  X: 643
-  Y: 620
+  X: 672
+  Y: 911

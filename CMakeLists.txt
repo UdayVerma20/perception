@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_msgs
   sensor_msgs
   geometry_msgs
+  gazebo_msgs
   # cv_bridge
   # image_transport
 )
@@ -57,15 +58,16 @@ find_package(OpenCV REQUIRED)
 
 ### Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-   CoordinateList.msg
-   Coordinates.msg
-   uday.msg
-   imu.msg
-   pid_input.msg
-   path_coordinates.msg
-   landmark_points.msg
-   
+  FILES
+  CoordinateList.msg
+  Coordinates.msg
+  uday.msg
+  imu.msg
+  pid_input.msg
+  path_coordinates.msg
+  landmark_points.msg
+  stateHeader.msg
+  deltaHeader.msg
    
 )
 
@@ -88,6 +90,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   sensor_msgs
+  gazebo_msgs
 )
 
 ################################################
@@ -123,7 +126,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES perception
   CATKIN_DEPENDS message_runtime 
-  roscpp std_msgs sensor_msgs rospy
+  roscpp std_msgs sensor_msgs rospy gazebo_msgs
   # geometry_msgs  cv_bridge image_transport
 #  DEPENDS system_lib
 )
@@ -177,6 +180,8 @@ add_executable (Clustering Clustering/Clustering.cpp)
 target_link_libraries (Clustering ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable (CustomClustering Clustering/CustomClustering.cpp)
 target_link_libraries (CustomClustering ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable (customsim Clustering/customsim.cpp)
+target_link_libraries (customsim ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 #GroundRemoval
 add_executable (DonSegmentation GroundRemoval/DonSegmentation.cpp)
@@ -191,6 +196,8 @@ add_executable(Lu GroundRemoval/Lu.cpp)
 target_link_libraries(Lu ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(Amz GroundRemoval/Amz.cpp)
 target_link_libraries(Amz ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(lusim GroundRemoval/lusim.cpp)
+target_link_libraries(lusim ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 #Mixed
 add_executable (Mixed Merged/Mixed.cpp)
